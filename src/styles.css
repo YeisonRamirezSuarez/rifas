@@ -45,9 +45,14 @@ body {
 .app__toggle,
 .app__barra {
   grid-column: 1 / -1;
-  justify-self: start;
+  justify-self: stretch;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.app__salir {
+  margin-left: auto;
 }
 
 .app__logo {

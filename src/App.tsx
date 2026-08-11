@@ -90,6 +90,13 @@ export default function App() {
           <button type="button" onClick={() => setPanelAbierto((v) => !v)}>
             {panelAbierto ? 'Ocultar configuración' : 'Configurar rifa'}
           </button>
+          {/* Aquí y no dentro del panel: con la configuración oculta no quedaba
+              ninguna forma de cerrar sesión. */}
+          {rifa.hayNube && (
+            <button type="button" className="app__salir" onClick={rifa.salir}>
+              Cerrar sesión
+            </button>
+          )}
         </div>
       )}
 
@@ -125,7 +132,6 @@ export default function App() {
             seleccionar={rifa.seleccionarRifa}
             crear={rifa.crearRifa}
             eliminar={rifa.eliminarRifa}
-            salir={rifa.salir}
             confirmar={confirmar}
           />
           {rifa.rifaActual && rifa.puedeEditar && (

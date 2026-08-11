@@ -9,7 +9,6 @@ type Props = {
   seleccionar: (id: string) => void;
   crear: (titulo: string) => Promise<string | null>;
   eliminar: (id: string) => Promise<string | null>;
-  salir: () => void;
   confirmar: (titulo: string, o?: { texto?: string; aceptar?: string; peligro?: boolean }) => Promise<boolean>;
 };
 
@@ -22,7 +21,6 @@ export function MisRifas({
   seleccionar,
   crear,
   eliminar,
-  salir,
   confirmar,
 }: Props) {
   const [titulo, setTitulo] = useState('');
@@ -42,14 +40,7 @@ export function MisRifas({
 
   return (
     <aside className="panel misrifas">
-      <div className="misrifas__cabecera">
-        <h2 className="panel__titulo">Mis rifas</h2>
-        {hayNube && (
-          <button type="button" onClick={salir}>
-            Salir
-          </button>
-        )}
-      </div>
+      <h2 className="panel__titulo">Mis rifas</h2>
 
       <ul className="misrifas__lista">
         {rifas.map((r) => (
