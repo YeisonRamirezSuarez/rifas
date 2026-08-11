@@ -21,9 +21,6 @@ type Props = {
   finalizar: (numeroGanador: number) => Promise<string | null>;
   reabrir: () => Promise<string | null>;
   vaciarTablero: () => Promise<string | null>;
-  exportarPoster: () => void;
-  exportarGanador: () => void;
-  exportando: string | null;
   confirmar: (titulo: string, o?: { texto?: string; aceptar?: string; peligro?: boolean }) => Promise<boolean>;
 };
 
@@ -44,9 +41,6 @@ export function PanelConfig({
   finalizar,
   reabrir,
   vaciarTablero,
-  exportarPoster,
-  exportarGanador,
-  exportando,
   confirmar,
 }: Props) {
   const c = estado.config;
@@ -265,9 +259,6 @@ export function PanelConfig({
               ))}
             </select>
           </label>
-          <button type="button" onClick={exportarPoster}>
-            {exportando === 'poster' ? 'Generando…' : 'Descargar póster (estado de WhatsApp)'}
-          </button>
         </section>
       )}
 
@@ -365,9 +356,6 @@ export function PanelConfig({
               <p className="panel__nota">
                 Sorteo cerrado. Ganador: <strong>{etiqueta(c.numeroGanador, c.totalNumeros)}</strong>
               </p>
-              <button type="button" className="boton--primario" onClick={exportarGanador}>
-                {exportando === 'ganador' ? 'Generando…' : 'Descargar imagen del ganador'}
-              </button>
               <button type="button" onClick={() => reabrir()}>
                 Reabrir sorteo
               </button>
@@ -403,15 +391,16 @@ export function PanelConfig({
             type="button"
             className="boton--peligro"
             onClick={async () => {
-              const ok = await confirmar('¿Vaciar el tablero?', {
-                texto: 'Se liberan todos los números vendidos. La configuración se conserva.',
-                aceptar: 'Vaciar',
+              const ok = await confirmar('¿Empezar de nuevo?', {
+                texto:
+                  'Se liberan todos los números y, si estaba cerrado, el sorteo vuelve a abrirse. La configuración se conserva.',
+                aceptar: 'Empezar de nuevo',
                 peligro: true,
               });
               if (ok) vaciarTablero();
             }}
           >
-            Vaciar tablero
+            Vaciar tablero y empezar de nuevo
           </button>
         </section>
       )}

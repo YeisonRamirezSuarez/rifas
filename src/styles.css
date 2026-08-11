@@ -394,6 +394,17 @@ body {
   width: 100%;
 }
 
+/* Sin tablero al lado, la lámina del ganador se queda con todo el ancho. */
+.app__poster--solo {
+  grid-column: 1 / -1;
+  max-width: 620px;
+}
+
+.app__descargar {
+  width: min(100%, 26rem);
+  padding: 0.7rem 1rem;
+}
+
 .app__poster {
   display: grid;
   gap: 1.5rem;

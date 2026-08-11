@@ -393,15 +393,22 @@ export function useRifa() {
     return subirConfig(actual, siguiente.config);
   }, [estado, actual, ponerEstado, subirConfig]);
 
-  /** Vacía el tablero pero conserva la rifa y su configuración. */
+  /**
+   * Vacía el tablero y empieza de nuevo con la misma configuración. Reabre a
+   * propósito: si se vacía un sorteo cerrado y el cierre se queda puesto, la
+   * rifa muestra un ganador cuyo puesto ya no existe.
+   */
   const vaciarTablero = useCallback(async (): Promise<string | null> => {
+    const siguiente = reabrirPuro({ ...estado, tickets: {} });
     if (!nube) {
-      ponerEstado(actual, { config: estado.config, tickets: {} });
+      ponerEstado(actual, siguiente);
       return null;
     }
     const { error } = await nube.from('numeros').delete().eq('rifa_id', actual);
-    return error?.message ?? null;
-  }, [estado, actual, ponerEstado]);
+    if (error) return error.message;
+    ponerEstado(actual, siguiente);
+    return subirConfig(actual, siguiente.config);
+  }, [estado, actual, ponerEstado, subirConfig]);
 
   /* ---------- cuenta ---------- */
 

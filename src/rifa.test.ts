@@ -170,4 +170,10 @@ describe('rifa', () => {
     expect(r.config.numeroGanador).toBeNull();
     expect(r.config.finalizado).toBe(false);
   });
+
+  it('con el sorteo cerrado no se puede vender', () => {
+    const cerrado = finalizar(ESTADO_INICIAL, 7);
+    expect(() => vender(cerrado, 12, 'Ana', '3162123456')).toThrow(/cerrado/i);
+    expect(() => vender(reabrir(cerrado), 12, 'Ana', '3162123456')).not.toThrow();
+  });
 });

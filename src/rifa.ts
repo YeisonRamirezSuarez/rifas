@@ -186,6 +186,9 @@ export function vender(
   telefono: string,
   pago: Pago = 'pendiente',
 ): Estado {
+  if (estado.config.finalizado) {
+    throw new Error('El sorteo ya está cerrado. Reábrelo para seguir vendiendo.');
+  }
   if (!dentroDelRango(numero, estado.config.totalNumeros)) {
     throw new Error('Número fuera de rango.');
   }

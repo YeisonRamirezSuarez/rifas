@@ -143,9 +143,6 @@ export default function App() {
               finalizar={rifa.finalizar}
               reabrir={rifa.reabrir}
               vaciarTablero={rifa.vaciarTablero}
-              exportarPoster={() => exportar('poster', posterRef.current, 'rifa')}
-              exportarGanador={() => exportar('ganador', ganadorRef.current, 'rifa-ganador')}
-              exportando={exportando}
               confirmar={confirmar}
             />
           )}
@@ -159,24 +156,58 @@ export default function App() {
       ) : (
         <div className="app__laminas">
           {errorExport && <p className="dialogo__error">{errorExport}</p>}
-          {/* El póster se achica para caber en pantalla, así que las casillas que
-              se tocan son las de este tablero; el póster queda de imagen. */}
-          <section className="tablerapp">
-            <h2 className="tablerapp__titulo">Elige tu número</h2>
-            <Tablero estado={rifa.estado} onSeleccionar={setSeleccion} variante="app" />
-            <ul className="leyenda">
-              <li className="leyenda__libre">Libre</li>
-              <li className="leyenda__apartado">Apartado</li>
-              <li className="leyenda__pagado">Pagado</li>
-            </ul>
-          </section>
 
-          <div className="app__poster">
-            {cerrado && (
+          {/* Cerrado el sorteo sobran el tablero y el póster: lo que se comparte
+              es el anuncio del ganador y nada más. */}
+          {cerrado ? (
+            <div className="app__poster app__poster--solo">
               <Ganador ref={ganadorRef} estado={rifa.estado} verNombre={rifa.puedeEditar} />
-            )}
-            <Poster ref={posterRef} estado={rifa.estado} onSeleccionar={setSeleccion} />
-          </div>
+              {rifa.puedeEditar && (
+                <button
+                  type="button"
+                  className="boton--primario app__descargar"
+                  onClick={() => exportar('ganador', ganadorRef.current, 'rifa-ganador')}
+                  disabled={exportando === 'ganador'}
+                >
+                  {exportando === 'ganador'
+                    ? 'Generando…'
+                    : 'Descargar imagen del ganador (estado de WhatsApp)'}
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* El póster se achica para caber en pantalla, así que las casillas
+                  que se tocan son las de este tablero. */}
+              <section className="tablerapp">
+                <h2 className="tablerapp__titulo">Elige tu número</h2>
+                <Tablero estado={rifa.estado} onSeleccionar={setSeleccion} variante="app" />
+                <ul className="leyenda">
+                  <li className="leyenda__libre">Libre</li>
+                  <li className="leyenda__apartado">Apartado</li>
+                  <li className="leyenda__pagado">Pagado</li>
+                </ul>
+              </section>
+
+              <div className="app__poster">
+                <Poster ref={posterRef} estado={rifa.estado} onSeleccionar={setSeleccion} />
+                {/* Pegado al póster y no dentro del panel: es la acción de esta
+                    lámina, y el botón queda a la vista tras mirarla. */}
+                {rifa.puedeEditar && (
+                  <button
+                    type="button"
+                    className="boton--primario app__descargar"
+                    onClick={() => exportar('poster', posterRef.current, 'rifa')}
+                    disabled={exportando === 'poster'}
+                  >
+                    {exportando === 'poster'
+                      ? 'Generando…'
+                      : 'Descargar póster (estado de WhatsApp)'}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 
