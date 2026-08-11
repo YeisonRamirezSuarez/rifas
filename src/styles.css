@@ -1,0 +1,1154 @@
+:root {
+  --vino: #63302f;
+  --vino-oscuro: #4a2123;
+  --rosa: #f2a2a2;
+  --rosa-claro: #f7bdbd;
+  --crema: #fbefea;
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Montserrat', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--vino-oscuro);
+  color: var(--crema);
+  font-family: var(--sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+.app {
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(0.5rem, 3vw, 1.5rem);
+  justify-items: center;
+}
+
+.app--panel {
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.app__toggle,
+.app__barra {
+  grid-column: 1 / -1;
+  justify-self: start;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.app__cargando {
+  margin: 3rem 0;
+  opacity: 0.7;
+}
+
+.acceso {
+  max-width: 360px;
+  margin: 3rem auto;
+}
+
+/* ---------- presentación y acceso ---------- */
+
+.app--onb {
+  padding: 0;
+}
+
+.onb {
+  display: grid;
+  grid-template-columns: 1fr minmax(320px, 400px);
+  gap: 3rem;
+  align-items: center;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 2.5rem);
+}
+
+@media (max-width: 900px) {
+  .onb {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.onb__marca {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--rosa);
+}
+
+.onb__titulo {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  line-height: 1.02;
+}
+
+.onb__titulo span {
+  display: block;
+  font-style: italic;
+  color: var(--rosa);
+}
+
+.onb__bajada {
+  max-width: 34rem;
+  margin: 1rem 0 0;
+  font-size: clamp(0.95rem, 2.4vw, 1.1rem);
+  line-height: 1.55;
+  opacity: 0.85;
+}
+
+.onb__precio {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.75rem 0 0;
+}
+
+.onb__precio-cifra {
+  font-family: var(--serif);
+  font-size: clamp(2.6rem, 8vw, 3.6rem);
+  font-weight: 700;
+  color: var(--rosa);
+}
+
+.onb__precio-nota {
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.onb__precio-detalle {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.onb__ventajas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem 1.5rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.onb__ventajas li {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+}
+
+.onb__ventajas li > span {
+  font-size: 1.3rem;
+  line-height: 1.2;
+}
+
+.onb__ventajas strong {
+  font-size: 0.9rem;
+}
+
+.onb__ventajas p {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  opacity: 0.75;
+}
+
+.onb__form {
+  align-self: start;
+  position: sticky;
+  top: 2rem;
+}
+
+.onb__cta {
+  margin-top: 0.35rem;
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+}
+
+.onb__cambio {
+  border-color: transparent;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+/* ---------- cuenta en revisión ---------- */
+
+.espera {
+  max-width: 30rem;
+  margin: 4rem auto;
+  text-align: center;
+  justify-items: center;
+}
+
+.espera__icono {
+  margin: 0;
+  font-size: 2.5rem;
+}
+
+.espera__texto {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  opacity: 0.85;
+}
+
+.espera__precio {
+  margin: 0.5rem 0 0;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--rosa);
+}
+
+/* ---------- cuentas (superadmin) ---------- */
+
+.panel__globo {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  margin-left: 0.5rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--rosa);
+  color: var(--vino);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cuentas {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.cuentas__fila {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ffffff1f;
+  border-radius: 8px;
+}
+
+.cuentas__fila strong {
+  display: block;
+  font-size: 0.85rem;
+}
+
+.cuentas__fila span {
+  display: block;
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+.cuentas__acciones {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.cuentas__acciones button {
+  flex: 1;
+  font-size: 0.75rem;
+}
+
+.dialogo--confirmar {
+  width: min(92vw, 360px);
+}
+
+.barra {
+  height: 5px;
+  border-radius: 999px;
+  background: #ffffff1f;
+  overflow: hidden;
+}
+
+.barra span {
+  display: block;
+  height: 100%;
+  background: var(--rosa);
+}
+
+.app__columna {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  width: 100%;
+}
+
+.misrifas__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.misrifas__lista {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 13rem;
+  overflow-y: auto;
+}
+
+.misrifas__item {
+  display: grid;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border-color: #ffffff26;
+  text-align: left;
+  font-size: 0.8rem;
+}
+
+.misrifas__item span {
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+.misrifas__item--activa {
+  background: var(--rosa);
+  color: var(--vino);
+  border-color: var(--rosa);
+}
+
+.misrifas__nueva {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.misrifas__nueva input {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .app--panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- póster ----------
+   Todo el póster mide en cqi (1% de su propio ancho): en móvil se encoge
+   entero en vez de reacomodarse, así el 10x10 nunca se rompe. */
+
+.app__laminas {
+  display: grid;
+  gap: 1.5rem;
+  justify-items: center;
+  width: 100%;
+}
+
+.poster {
+  container-type: inline-size;
+  width: min(100%, 620px);
+  padding: 5cqi 4cqi 6cqi;
+  background: var(--vino);
+  color: var(--crema);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.45);
+  /* columna flex para que la exportación pueda estirar a 9:16 con space-between */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- florituras ---------- */
+
+.florituras {
+  position: absolute;
+  inset: 0;
+  color: var(--rosa);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Los patrones cubren todo el póster, no solo los bordes: a la misma opacidad
+   que las piezas de esquina compiten con el tablero y el título. */
+.florituras__patron {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+}
+
+.florituras__pieza {
+  position: absolute;
+  width: 46cqi;
+  height: auto;
+}
+
+.florituras__pieza--sd {
+  top: -2cqi;
+  right: -6cqi;
+}
+
+.florituras__pieza--ii {
+  bottom: -4cqi;
+  left: -8cqi;
+  transform: scaleX(-1);
+}
+
+.florituras__pieza--di {
+  top: 28cqi;
+  left: -18cqi;
+  width: 34cqi;
+  transform: rotate(-160deg);
+}
+
+/* El marco va alineado y dentro del póster, no sangrando como las ramas. */
+.florituras__pieza--marco-sd {
+  top: 2.5cqi;
+  right: 2.5cqi;
+  width: 44cqi;
+}
+
+.florituras__pieza--marco-ii {
+  bottom: 2.5cqi;
+  left: 2.5cqi;
+  width: 44cqi;
+  transform: rotate(180deg);
+}
+
+/* ---------- cabecera ---------- */
+
+.poster__cabecera {
+  position: relative;
+  text-align: center;
+}
+
+.poster__titulo {
+  margin: 0;
+  line-height: 0.86;
+  overflow-wrap: break-word;
+}
+
+.poster__linea-1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2cqi;
+}
+
+.poster__titulo-1 {
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  text-transform: uppercase;
+}
+
+.poster__titulo-2 {
+  display: block;
+  margin-top: -1cqi;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
+.poster__corazon {
+  color: var(--rosa);
+  font-size: 13cqi;
+  line-height: 1;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.25));
+}
+
+.poster__corazon--pie {
+  font-size: 15cqi;
+}
+
+.poster__cinta {
+  position: relative;
+  z-index: 1;
+  margin: 2.5cqi 0 0;
+  padding: 1.2cqi 2cqi;
+  background: var(--rosa);
+  color: var(--vino);
+  font-size: 3cqi;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  transform: rotate(-1.6deg);
+}
+
+.poster__premio {
+  margin: 2.4cqi 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 5.4cqi;
+  line-height: 1.15;
+}
+
+.poster__loteria {
+  margin: 1.6cqi 0 0;
+  color: var(--rosa-claro);
+  font-size: 2.6cqi;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.poster__ganador {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 8cqi;
+  line-height: 1.2;
+}
+
+.poster__ganador strong {
+  display: block;
+  font-size: 2em;
+  color: var(--rosa);
+}
+
+/* ---------- tablero ---------- */
+
+.tablero {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.5cqi;
+  width: 76%;
+  margin: 3cqi auto 0;
+}
+
+/* En pantallas chicas el tablero se ensancha: celdas tocables sin romper el 10x10. */
+@container (max-width: 480px) {
+  .tablero {
+    width: 94%;
+  }
+}
+
+.celda {
+  --relleno: var(--crema);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  /* px y em, no cqi: la muestra del panel vive fuera del contenedor del
+     póster y con cqi se vería con otro grosor que el tablero real. */
+  border: 1px solid var(--vino-oscuro);
+  border-radius: 2px;
+  background: var(--relleno);
+  color: var(--vino);
+  font-family: var(--sans);
+  font-size: max(9px, 2.7cqi);
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.12s, background 0.12s;
+}
+
+.celda:hover {
+  background: var(--rosa-claro);
+  transform: scale(1.12);
+  z-index: 1;
+}
+
+.celda:focus-visible {
+  outline: 0.4cqi solid var(--rosa);
+  outline-offset: 0.3cqi;
+  z-index: 1;
+}
+
+/* apartado = vendido sin pagar (tono claro). pagado = cobrado (tono fuerte).
+   Cada estado solo define --relleno; los estilos de abajo lo usan sin saber
+   cuál es, por eso una celda libre (--relleno: crema) queda lisa sola. */
+.celda--apartado {
+  --relleno: var(--rosa-claro);
+  color: var(--vino);
+  font-weight: 600;
+  border-style: dashed;
+}
+
+.celda--pagado {
+  --relleno: var(--rosa);
+  color: var(--vino);
+  font-weight: 600;
+}
+
+.celda--solido {
+  background: var(--relleno);
+}
+
+.celda--contorno {
+  background: var(--crema);
+  box-shadow: inset 0 0 0 0.22em var(--relleno);
+}
+
+.celda--rayas {
+  background: repeating-linear-gradient(45deg, var(--relleno) 0 0.3em, var(--crema) 0.3em 0.7em);
+}
+
+/* Tinte según el estado: con fondo plano, apartado y pagado se veían iguales.
+   Una celda libre tiene --relleno: crema, así que la mezcla la deja lisa. */
+.celda--sello {
+  background: color-mix(in srgb, var(--relleno) 55%, var(--crema));
+}
+
+.celda--sello .celda__marca {
+  width: 2em;
+  height: 2em;
+  transform: rotate(-15deg);
+}
+
+.celda--sello.celda--apartado .celda__marca {
+  opacity: 0.45;
+}
+
+.celda--sello.celda--pagado .celda__marca {
+  opacity: 0.8;
+}
+
+.celda--ganadora {
+  background: #ffd97a;
+  color: #6b4b00;
+  font-weight: 700;
+  border-color: #6b4b00;
+  border-style: solid;
+  box-shadow: none;
+}
+
+.celda__marca {
+  width: 1.6em;
+  height: 1.6em;
+  opacity: 0.85;
+}
+
+.celda__ganadora {
+  font-size: 1.3em;
+  line-height: 1;
+}
+
+/* ---------- pie del póster ---------- */
+
+.poster__pie {
+  position: relative;
+  z-index: 1;
+  margin-top: 5cqi;
+  text-align: center;
+}
+
+.poster__valor-label {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 6cqi;
+}
+
+.poster__valor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2cqi;
+  margin: -1cqi 0 0;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 14cqi;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.poster__mensaje {
+  margin: 1cqi 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 8cqi;
+  line-height: 1.1;
+}
+
+.poster__contacto {
+  margin: 2.5cqi 0 0;
+  font-size: 4.2cqi;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+}
+
+/* ---------- lámina del ganador ---------- */
+
+.ganador {
+  justify-content: space-between;
+  text-align: center;
+}
+
+.ganador__antetitulo {
+  margin: 0;
+  color: var(--rosa-claro);
+  font-size: 3cqi;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.ganador__titulo {
+  margin: 2cqi 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 13cqi;
+  line-height: 1;
+}
+
+.ganador__cuerpo {
+  margin: 6cqi 0;
+}
+
+.ganador__label {
+  margin: 0;
+  font-size: 3.2cqi;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+}
+
+.ganador__numero {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34cqi;
+  margin: 2cqi 0 0;
+  padding: 2cqi 4cqi;
+  border-radius: 4cqi;
+  background: var(--crema);
+  color: var(--vino);
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 26cqi;
+  line-height: 1.1;
+}
+
+.ganador__nombre {
+  margin: 3cqi 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 9cqi;
+  line-height: 1.1;
+}
+
+.ganador__nombre--vacio {
+  font-size: 5cqi;
+  opacity: 0.75;
+}
+
+.ganador__premio {
+  margin: 1.5cqi 0 0;
+  color: var(--rosa-claro);
+  font-size: 4.4cqi;
+}
+
+.ganador__gracias {
+  margin: 1.5cqi 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 5.5cqi;
+}
+
+/* ---------- panel de configuración ---------- */
+
+.panel {
+  width: 100%;
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: #ffffff0f;
+  border: 1px solid #ffffff1f;
+  border-radius: 12px;
+}
+
+.panel__titulo {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.3rem;
+}
+
+.panel__nav {
+  display: flex;
+  flex-wrap: wrap; /* envuelven en dos filas; nada de scroll horizontal */
+  gap: 0.25rem;
+  border-bottom: 1px solid #ffffff26;
+  padding-bottom: 0.5rem;
+}
+
+.panel__tab {
+  flex: 1 1 auto;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+
+.panel__tab--activa {
+  background: var(--rosa);
+  color: var(--vino);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.panel__seccion {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.panel__etiqueta {
+  margin: 0.25rem 0 -0.4rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.95;
+}
+
+.panel__paletas,
+.panel__marcas,
+.panel__fondos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.panel__opcion {
+  flex: 1 1 auto;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.75rem;
+  border-color: #ffffff30;
+}
+
+.panel__opcion--activa {
+  background: var(--rosa);
+  color: var(--vino);
+  border-color: var(--rosa);
+  font-weight: 600;
+}
+
+.marca {
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0.4rem;
+  border-radius: 8px;
+  border-color: #ffffff30;
+  color: var(--crema);
+}
+
+.marca svg {
+  width: 100%;
+  height: 100%;
+}
+
+.marca--activa {
+  background: var(--rosa);
+  color: var(--vino);
+  border-color: var(--rosa);
+}
+
+/* Muestra en vivo de los tres estados, con el tamaño real de una casilla. */
+.panel__muestra {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: -0.25rem;
+}
+
+.panel__muestra .celda {
+  width: 2.6rem;
+  font-size: 0.85rem;
+  cursor: default;
+}
+
+.panel__muestra .celda:hover {
+  transform: none;
+}
+
+.paleta {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  width: 3rem;
+  height: 2.2rem;
+  padding: 4px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.paleta span {
+  flex: 1;
+  height: 60%;
+  border-radius: 3px;
+}
+
+.paleta--activa {
+  border-color: var(--crema);
+  box-shadow: 0 0 0 2px var(--rosa);
+}
+
+.panel__fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.panel__check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.panel__resumen {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.25rem 0 0;
+  text-align: center;
+}
+
+.panel__resumen dt {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.panel__resumen dd {
+  margin: 0.15rem 0 0;
+  font-family: var(--serif);
+  font-size: 1.1rem;
+}
+
+.panel__caja {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.panel__caja th,
+.panel__caja td {
+  padding: 0.35rem 0.25rem;
+  border-bottom: 1px solid #ffffff1a;
+  text-align: right;
+  font-weight: 400;
+}
+
+.panel__caja th {
+  text-align: left;
+}
+
+.panel__caja-total th,
+.panel__caja-total td {
+  font-weight: 700;
+  color: var(--rosa-claro);
+}
+
+.panel__fila--fin {
+  align-items: end;
+}
+
+.panel__nota {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.dialogo__pagos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.dialogo__pagos button {
+  flex: 1;
+  min-width: 5.5rem;
+  font-size: 0.78rem;
+}
+
+label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.95;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #ffffff30;
+  border-radius: 6px;
+  background: #ffffff12;
+  color: inherit;
+  font: inherit;
+  font-size: 1rem; /* 16px evita el zoom automático de iOS al enfocar */
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* El width:100% de arriba estiraba también el checkbox y sacaba el texto del panel. */
+input[type='checkbox'] {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
+  margin: 0;
+  accent-color: var(--rosa);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 6rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--rosa);
+}
+
+.panel__previo {
+  margin: -0.35rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border-left: 2px solid var(--rosa);
+  background: #ffffff0d;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: pre-line;
+  opacity: 0.9;
+}
+
+option {
+  color: #000;
+}
+
+button,
+.boton {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--rosa);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--crema);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+
+button:hover,
+.boton:hover {
+  background: #f2a2a222;
+}
+
+.boton--primario {
+  background: var(--rosa);
+  color: var(--vino);
+  font-weight: 600;
+}
+
+.boton--peligro {
+  border-color: #e08585;
+  color: #ffd4d4;
+}
+
+/* ---------- diálogo ---------- */
+
+.dialogo {
+  width: min(92vw, 380px);
+  padding: 1.5rem;
+  border: 1px solid var(--rosa);
+  border-radius: 14px;
+  background: var(--vino);
+  color: var(--crema);
+  position: relative;
+}
+
+.dialogo::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.dialogo--imagen {
+  width: min(92vw, 420px);
+}
+
+.dialogo__imagen {
+  display: block;
+  width: 100%;
+  max-height: 55vh;
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  background: #0003;
+}
+
+.dialogo__titulo {
+  margin: 0 0 1rem;
+  font-family: var(--serif);
+  font-size: 1.4rem;
+}
+
+.dialogo__cuerpo {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dialogo__etiqueta {
+  margin: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+.dialogo__dato {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
+}
+
+.dialogo__error {
+  margin: 0;
+  color: #ffd4d4;
+  font-size: 0.85rem;
+}
+
+.dialogo__acciones {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.dialogo__acciones > * {
+  flex: 1;
+}
+
+.dialogo__cerrar {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-color: transparent;
+}

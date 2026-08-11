@@ -1,0 +1,170 @@
+import { useRef, useState } from 'react';
+import { DashboardSuper } from './components/DashboardSuper';
+import { DialogoImagen } from './components/DialogoImagen';
+import { EnEspera } from './components/EnEspera';
+import { DialogoNumero } from './components/DialogoNumero';
+import { Ganador } from './components/Ganador';
+import { MisRifas } from './components/MisRifas';
+import { Onboarding } from './components/Onboarding';
+import { PanelConfig } from './components/PanelConfig';
+import { PanelSuperadmin } from './components/PanelSuperadmin';
+import { Poster } from './components/Poster';
+import { generarPng, type Imagen } from './exportar';
+import { enviarCorreo } from './correos';
+import { useConfirmar } from './useConfirmar';
+import { usePerfil } from './usePerfil';
+import { useRifa } from './useRifa';
+import { useTema } from './useTema';
+
+export default function App() {
+  const rifa = useRifa();
+  const cuenta = usePerfil(rifa.usuarioId);
+  const { confirmar, dialogo: dialogoConfirmar } = useConfirmar();
+  useTema(rifa.estado.config.paleta, rifa.estado.config.tipografia);
+
+  const [seleccion, setSeleccion] = useState<number | null>(null);
+  const [panelAbierto, setPanelAbierto] = useState(true);
+  const [exportando, setExportando] = useState<string | null>(null);
+  const [errorExport, setErrorExport] = useState<string | null>(null);
+  const [imagen, setImagen] = useState<Imagen | null>(null);
+  const posterRef = useRef<HTMLElement>(null);
+  const ganadorRef = useRef<HTMLElement>(null);
+
+  const mostrarPanel = rifa.puedeEditar && cuenta.aprobado && panelAbierto;
+  const cerrado = rifa.estado.config.finalizado && rifa.estado.config.numeroGanador !== null;
+
+  const exportar = async (clave: string, nodo: HTMLElement | null, nombre: string) => {
+    if (!nodo) return;
+    setExportando(clave);
+    setErrorExport(null);
+    const { imagen: nueva, error } = await generarPng(nodo, nombre);
+    setExportando(null);
+    if (error) setErrorExport(error);
+    else if (nueva) setImagen(nueva);
+  };
+
+  const cerrarImagen = () => {
+    if (imagen) URL.revokeObjectURL(imagen.url); // sin esto el PNG se queda en memoria
+    setImagen(null);
+  };
+
+  // Visitante con el link: solo el tablero. Sin sesión y sin link: presentación.
+  if (!rifa.haySesion && !rifa.rifaActual) {
+    return (
+      <main className="app app--onb">
+        {rifa.cargando ? (
+          <p className="app__cargando">Cargando…</p>
+        ) : (
+          <Onboarding
+            entrar={rifa.entrar}
+            registrarse={async (email, clave, nombre) => {
+              const err = await rifa.registrarse(email, clave, nombre);
+              // El correo es un aviso, no el trámite: si falla, la cuenta ya quedó creada.
+              if (!err) await enviarCorreo('solicitud', { nombre, email });
+              return err;
+            }}
+          />
+        )}
+      </main>
+    );
+  }
+
+  // Cuenta creada pero todavía sin aprobar por un superadmin.
+  if (rifa.haySesion && rifa.hayNube && !cuenta.cargando && !cuenta.aprobado) {
+    return (
+      <main className="app">
+        <EnEspera perfil={cuenta.perfil} salir={rifa.salir} />
+      </main>
+    );
+  }
+
+  return (
+    <main className={`app${mostrarPanel ? ' app--panel' : ''}`}>
+      {rifa.puedeEditar && (
+        <div className="app__barra">
+          <button type="button" onClick={() => setPanelAbierto((v) => !v)}>
+            {panelAbierto ? 'Ocultar configuración' : 'Configurar rifa'}
+          </button>
+        </div>
+      )}
+
+      {mostrarPanel && (
+        <div className="app__columna">
+          {cuenta.esSuperadmin && (
+            <>
+              <PanelSuperadmin
+                solicitudes={cuenta.solicitudes}
+                decidir={async (id, estado) => {
+                  const err = await cuenta.decidir(id, estado);
+                  if (!err) {
+                    const p = cuenta.solicitudes.find((s) => s.id === id);
+                    if (p && estado !== 'pendiente') {
+                      await enviarCorreo(estado === 'aprobado' ? 'aprobada' : 'rechazada', {
+                        nombre: p.nombre ?? '',
+                        email: p.email,
+                      });
+                    }
+                  }
+                  return err;
+                }}
+                recargar={cuenta.recargarSolicitudes}
+              />
+              <DashboardSuper />
+            </>
+          )}
+          <MisRifas
+            rifas={rifa.rifas}
+            actual={rifa.rifaActual}
+            hayNube={rifa.hayNube}
+            linkPublico={rifa.linkPublico}
+            seleccionar={rifa.seleccionarRifa}
+            crear={rifa.crearRifa}
+            eliminar={rifa.eliminarRifa}
+            salir={rifa.salir}
+            confirmar={confirmar}
+          />
+          {rifa.rifaActual && (
+            <PanelConfig
+              estado={rifa.estado}
+              configurar={rifa.configurar}
+              finalizar={rifa.finalizar}
+              reabrir={rifa.reabrir}
+              vaciarTablero={rifa.vaciarTablero}
+              exportarPoster={() => exportar('poster', posterRef.current, 'rifa')}
+              exportarGanador={() => exportar('ganador', ganadorRef.current, 'rifa-ganador')}
+              exportando={exportando}
+              confirmar={confirmar}
+            />
+          )}
+        </div>
+      )}
+
+      {rifa.cargando ? (
+        <p className="app__cargando">Cargando rifa…</p>
+      ) : rifa.sinRifas ? (
+        <p className="app__cargando">Crea tu primera rifa para empezar.</p>
+      ) : (
+        <div className="app__laminas">
+          {errorExport && <p className="dialogo__error">{errorExport}</p>}
+          {cerrado && <Ganador ref={ganadorRef} estado={rifa.estado} verNombre={rifa.puedeEditar} />}
+          <Poster ref={posterRef} estado={rifa.estado} onSeleccionar={setSeleccion} />
+        </div>
+      )}
+
+      <DialogoImagen imagen={imagen} onCerrar={cerrarImagen} />
+
+      <DialogoNumero
+        estado={rifa.estado}
+        numero={seleccion}
+        puedeEditar={rifa.puedeEditar}
+        vender={rifa.vender}
+        marcarPago={rifa.marcarPago}
+        liberar={rifa.liberar}
+        confirmar={confirmar}
+        onCerrar={() => setSeleccion(null)}
+      />
+
+      {dialogoConfirmar}
+    </main>
+  );
+}

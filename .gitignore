@@ -1,0 +1,8 @@
+node_modules
+dist
+.claude
+.vercel
+.env
+.env.local
+.db-url
+*.tsbuildinfo
