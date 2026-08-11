@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { compartir, descargar, sePuedeCompartir, type Imagen } from '../exportar';
+import { IconoUI } from '../marcas';
 
 type Props = { imagen: Imagen | null; onCerrar: () => void };
 
@@ -57,7 +58,7 @@ export function DialogoImagen({ imagen, onCerrar }: Props) {
           </div>
 
           <button type="button" className="dialogo__cerrar" onClick={onCerrar} aria-label="Cerrar">
-            ✕
+            <IconoUI id="cerrar" />
           </button>
         </>
       )}

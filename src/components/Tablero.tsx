@@ -1,4 +1,4 @@
-import { estiloPorId, Icono } from '../marcas';
+import { estiloPorId, Icono, IconoUI } from '../marcas';
 import { estadoNumero, etiqueta, numeros, type Estado } from '../rifa';
 
 type Props = { estado: Estado; onSeleccionar: (numero: number) => void };
@@ -33,7 +33,7 @@ export function Tablero({ estado, onSeleccionar }: Props) {
             onClick={() => onSeleccionar(n)}
           >
             {esGanador ? (
-              <span className="celda__ganadora">★</span>
+              <IconoUI id="trofeo" className="celda__ganadora" />
             ) : tapado ? (
               <Icono id={marca} className="celda__marca" />
             ) : (

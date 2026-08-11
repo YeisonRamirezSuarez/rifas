@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { IconoUI } from '../marcas';
 import {
   etiqueta,
   linkComprador,
@@ -200,7 +201,7 @@ export function DialogoNumero({
           )}
 
           <button type="button" className="dialogo__cerrar" onClick={onCerrar} aria-label="Cerrar">
-            ✕
+            <IconoUI id="cerrar" />
           </button>
         </>
       )}

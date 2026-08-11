@@ -1,17 +1,18 @@
 import { useState } from 'react';
+import { IconoUI, type Simbolo } from '../marcas';
 
 type Props = {
   entrar: (email: string, clave: string) => Promise<string | null>;
   registrarse: (email: string, clave: string, nombre: string) => Promise<string | null>;
 };
 
-const VENTAJAS = [
-  { icono: '🎟️', titulo: 'Rifas ilimitadas', texto: 'Lleva todas las que quieras al tiempo, cada una con su propio tablero y su link.' },
-  { icono: '📲', titulo: 'Comparte y vende', texto: 'Link público para tus compradores y póster listo para estado de WhatsApp.' },
-  { icono: '💵', titulo: 'Cuadre de caja', texto: 'Efectivo, transferencia y lo que falta cobrar, siempre al día.' },
-  { icono: '🔒', titulo: 'Datos protegidos', texto: 'Los teléfonos de tus compradores solo los ves tú. Nadie más.' },
-  { icono: '🎨', titulo: 'A tu estilo', texto: 'Paletas, tipografías, fondos e íconos. Tu rifa con tu cara.' },
-  { icono: '🏆', titulo: 'Cierre con ganador', texto: 'Anuncia al ganador con una imagen lista para publicar.' },
+const VENTAJAS: { icono: Simbolo; titulo: string; texto: string }[] = [
+  { icono: 'boleta', titulo: 'Rifas ilimitadas', texto: 'Lleva todas las que quieras al tiempo, cada una con su propio tablero y su link.' },
+  { icono: 'compartir', titulo: 'Comparte y vende', texto: 'Link público para tus compradores y póster listo para estado de WhatsApp.' },
+  { icono: 'dinero', titulo: 'Cuadre de caja', texto: 'Efectivo, transferencia y lo que falta cobrar, siempre al día.' },
+  { icono: 'candado', titulo: 'Datos protegidos', texto: 'Los teléfonos de tus compradores solo los ves tú. Nadie más.' },
+  { icono: 'pincel', titulo: 'A tu estilo', texto: 'Paletas, tipografías, fondos e íconos. Tu rifa con tu cara.' },
+  { icono: 'trofeo', titulo: 'Cierre con ganador', texto: 'Anuncia al ganador con una imagen lista para publicar.' },
 ];
 
 export function Onboarding({ entrar, registrarse }: Props) {
@@ -46,7 +47,7 @@ export function Onboarding({ entrar, registrarse }: Props) {
         <ul className="onb__ventajas">
           {VENTAJAS.map((v) => (
             <li key={v.titulo}>
-              <span aria-hidden="true">{v.icono}</span>
+              <IconoUI id={v.icono} className="onb__ventaja-icono" />
               <div>
                 <strong>{v.titulo}</strong>
                 <p>{v.texto}</p>

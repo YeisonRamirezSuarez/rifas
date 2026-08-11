@@ -1,3 +1,4 @@
+import { IconoUI } from '../marcas';
 import type { Perfil } from '../usePerfil';
 
 type Props = { perfil: Perfil | null; salir: () => void };
@@ -8,9 +9,7 @@ export function EnEspera({ perfil, salir }: Props) {
 
   return (
     <section className="panel espera">
-      <p className="espera__icono" aria-hidden="true">
-        {rechazada ? '✕' : '⏳'}
-      </p>
+      <IconoUI id={rechazada ? 'bloqueado' : 'reloj'} className="espera__icono" />
       <h1 className="panel__titulo">
         {rechazada ? 'Solicitud no aprobada' : 'Tu cuenta está en revisión'}
       </h1>

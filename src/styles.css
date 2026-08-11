@@ -71,6 +71,13 @@ body {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
+
+  /* En móvil el que vuelve entra a firmar, no a leer: el formulario va de
+     primero y el argumento de venta queda debajo. */
+  .onb__form {
+    order: -1;
+    position: static;
+  }
 }
 
 .onb__marca {
@@ -144,9 +151,13 @@ body {
   align-items: flex-start;
 }
 
-.onb__ventajas li > span {
-  font-size: 1.3rem;
-  line-height: 1.2;
+/* Doble clase: gana el tamaño propio sobre el de .icono-ui, que va más abajo. */
+.onb__ventaja-icono.icono-ui {
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-top: 0.05rem;
+  color: var(--rosa);
+  opacity: 1;
 }
 
 .onb__ventajas strong {
@@ -187,9 +198,11 @@ body {
   justify-items: center;
 }
 
-.espera__icono {
-  margin: 0;
-  font-size: 2.5rem;
+/* Doble clase: gana el tamaño propio sobre el de .icono-ui, que va más abajo. */
+.espera__icono.icono-ui {
+  width: 2.5rem;
+  height: 2.5rem;
+  opacity: 0.85;
 }
 
 .espera__texto {
@@ -460,15 +473,18 @@ body {
   text-transform: lowercase;
 }
 
-.poster__corazon {
+/* Doble clase: gana el tamaño propio sobre el de .icono-ui, que va más abajo. */
+.poster__corazon.icono-ui {
+  width: 12cqi;
+  height: 12cqi;
   color: var(--rosa);
-  font-size: 13cqi;
-  line-height: 1;
+  opacity: 1;
   filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.25));
 }
 
-.poster__corazon--pie {
-  font-size: 15cqi;
+.poster__corazon--pie.icono-ui {
+  width: 14cqi;
+  height: 14cqi;
 }
 
 .poster__cinta {
@@ -629,9 +645,18 @@ body {
   opacity: 0.85;
 }
 
-.celda__ganadora {
-  font-size: 1.3em;
-  line-height: 1;
+.celda__ganadora.icono-ui {
+  width: 1.5em;
+  height: 1.5em;
+}
+
+/* Íconos de interfaz: heredan color y tamaño de texto del botón que los lleva. */
+.icono-ui {
+  width: 1.25em;
+  height: 1.25em;
+  display: inline-block;
+  vertical-align: middle;
+  flex: none;
 }
 
 /* ---------- pie del póster ---------- */

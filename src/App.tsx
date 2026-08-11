@@ -30,7 +30,10 @@ export default function App() {
   const posterRef = useRef<HTMLElement>(null);
   const ganadorRef = useRef<HTMLElement>(null);
 
-  const mostrarPanel = rifa.puedeEditar && cuenta.aprobado && panelAbierto;
+  // El panel depende de tener sesión, no de ser dueño de la rifa que se está
+  // viendo: con cero rifas no hay rifa propia, y antes eso escondía también el
+  // botón de crearla y el control del superadmin.
+  const mostrarPanel = rifa.haySesion && cuenta.aprobado && panelAbierto;
   const cerrado = rifa.estado.config.finalizado && rifa.estado.config.numeroGanador !== null;
 
   const exportar = async (clave: string, nodo: HTMLElement | null, nombre: string) => {
@@ -80,7 +83,7 @@ export default function App() {
 
   return (
     <main className={`app${mostrarPanel ? ' app--panel' : ''}`}>
-      {rifa.puedeEditar && (
+      {rifa.haySesion && cuenta.aprobado && (
         <div className="app__barra">
           <button type="button" onClick={() => setPanelAbierto((v) => !v)}>
             {panelAbierto ? 'Ocultar configuración' : 'Configurar rifa'}
@@ -123,7 +126,7 @@ export default function App() {
             salir={rifa.salir}
             confirmar={confirmar}
           />
-          {rifa.rifaActual && (
+          {rifa.rifaActual && rifa.puedeEditar && (
             <PanelConfig
               estado={rifa.estado}
               configurar={rifa.configurar}

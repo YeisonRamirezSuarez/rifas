@@ -88,7 +88,8 @@ export function MisRifas({
         </button>
       </form>
 
-      {actual && (
+      {/* Solo para una rifa propia: con el link de otra, `actual` no es tuya. */}
+      {rifas.some((r) => r.id === actual) && (
         <div className="dialogo__acciones">
           {hayNube && (
             <button type="button" onClick={copiar}>
@@ -98,8 +99,6 @@ export function MisRifas({
           <button
             type="button"
             className="boton--peligro"
-            disabled={rifas.length <= 1}
-            title={rifas.length <= 1 ? 'Debe quedar al menos una rifa' : undefined}
             onClick={async () => {
               const ok = await confirmar('¿Borrar esta rifa?', {
                 texto: 'Se pierden todos sus números vendidos. No se puede deshacer.',
