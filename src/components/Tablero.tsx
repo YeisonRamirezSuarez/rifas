@@ -1,12 +1,7 @@
 import { estiloPorId, Icono, IconoUI } from '../marcas';
 import { estadoNumero, etiqueta, numeros, type Estado } from '../rifa';
 
-type Props = {
-  estado: Estado;
-  onSeleccionar: (numero: number) => void;
-  /** 'app' lo saca del póster: casillas grandes y colores del chrome, no de la paleta. */
-  variante?: 'poster' | 'app';
-};
+type Props = { estado: Estado; onSeleccionar: (numero: number) => void };
 
 const TEXTO: Record<string, string> = {
   libre: 'disponible',
@@ -14,16 +9,12 @@ const TEXTO: Record<string, string> = {
   pagado: 'vendido y pagado',
 };
 
-export function Tablero({ estado, onSeleccionar, variante = 'poster' }: Props) {
+export function Tablero({ estado, onSeleccionar }: Props) {
   const { totalNumeros, ocultarVendidos, numeroGanador, marca } = estado.config;
   const estilo = estiloPorId(estado.config.estiloCelda);
 
   return (
-    <div
-      className={`tablero${variante === 'app' ? ' tablero--app' : ''}`}
-      role="grid"
-      aria-label="Números de la rifa"
-    >
+    <div className="tablero" role="grid" aria-label="Números de la rifa">
       {numeros(totalNumeros).map((n) => {
         const situacion = estadoNumero(estado, n);
         const esGanador = n === numeroGanador;

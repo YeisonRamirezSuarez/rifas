@@ -4,12 +4,12 @@ import { DialogoImagen } from './components/DialogoImagen';
 import { EnEspera } from './components/EnEspera';
 import { DialogoNumero } from './components/DialogoNumero';
 import { Ganador } from './components/Ganador';
+import { Leyenda } from './components/Leyenda';
 import { MisRifas } from './components/MisRifas';
 import { Onboarding } from './components/Onboarding';
 import { PanelConfig } from './components/PanelConfig';
 import { PanelSuperadmin } from './components/PanelSuperadmin';
 import { Poster } from './components/Poster';
-import { Tablero } from './components/Tablero';
 import { generarPng, type Imagen } from './exportar';
 import { enviarCorreo } from './correos';
 import { useConfirmar } from './useConfirmar';
@@ -176,37 +176,23 @@ export default function App() {
               )}
             </div>
           ) : (
-            <>
-              {/* El póster se achica para caber en pantalla, así que las casillas
-                  que se tocan son las de este tablero. */}
-              <section className="tablerapp">
-                <h2 className="tablerapp__titulo">Elige tu número</h2>
-                <Tablero estado={rifa.estado} onSeleccionar={setSeleccion} variante="app" />
-                <ul className="leyenda">
-                  <li className="leyenda__libre">Libre</li>
-                  <li className="leyenda__apartado">Apartado</li>
-                  <li className="leyenda__pagado">Pagado</li>
-                </ul>
-              </section>
-
-              <div className="app__poster">
-                <Poster ref={posterRef} estado={rifa.estado} onSeleccionar={setSeleccion} />
-                {/* Pegado al póster y no dentro del panel: es la acción de esta
-                    lámina, y el botón queda a la vista tras mirarla. */}
-                {rifa.puedeEditar && (
-                  <button
-                    type="button"
-                    className="boton--primario app__descargar"
-                    onClick={() => exportar('poster', posterRef.current, 'rifa')}
-                    disabled={exportando === 'poster'}
-                  >
-                    {exportando === 'poster'
-                      ? 'Generando…'
-                      : 'Descargar póster (estado de WhatsApp)'}
-                  </button>
-                )}
-              </div>
-            </>
+            <div className="app__poster">
+              <Poster ref={posterRef} estado={rifa.estado} onSeleccionar={setSeleccion} />
+              <Leyenda config={rifa.estado.config} />
+              {/* Fuera de <Poster>: lo exportado es solo la lámina. */}
+              {rifa.puedeEditar && (
+                <button
+                  type="button"
+                  className="boton--primario app__descargar"
+                  onClick={() => exportar('poster', posterRef.current, 'rifa')}
+                  disabled={exportando === 'poster'}
+                >
+                  {exportando === 'poster'
+                    ? 'Generando…'
+                    : 'Descargar póster (estado de WhatsApp)'}
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}

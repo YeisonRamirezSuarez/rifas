@@ -11,9 +11,10 @@ import {
   type Estado,
 } from '../rifa';
 import { FONDOS } from '../fondos';
-import { ESTILOS_CELDA, estiloPorId, Icono, MARCAS } from '../marcas';
+import { ESTILOS_CELDA, Icono, MARCAS } from '../marcas';
 import { PALETAS, TIPOGRAFIAS } from '../temas';
 import { CampoNumero } from './CampoNumero';
+import { Leyenda } from './Leyenda';
 
 type Props = {
   estado: Estado;
@@ -195,21 +196,7 @@ export function PanelConfig({
             </select>
           </label>
 
-          <div className="panel__muestra">
-            {(['libre', 'apartado', 'pagado'] as const).map((situacion, i) => (
-              <span
-                key={situacion}
-                className={`celda celda--${situacion} celda--${estiloPorId(c.estiloCelda)}`}
-              >
-                {situacion === 'libre' || !c.ocultarVendidos ? (
-                  etiqueta(i, c.totalNumeros)
-                ) : (
-                  <Icono id={c.marca} className="celda__marca" />
-                )}
-              </span>
-            ))}
-          </div>
-          <p className="panel__nota">Muestra: libre · apartado · pagado</p>
+          <Leyenda config={c} />
         </section>
       )}
 

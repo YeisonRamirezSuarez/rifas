@@ -414,28 +414,14 @@ body {
   width: 100%;
 }
 
-/* Con sitio de sobra el tablero y el póster van lado a lado: se ve el número
-   que se toca y la boleta al tiempo, sin scroll entre uno y otro. */
-@media (min-width: 1200px) {
-  .app__laminas {
-    /* Ancho fijo para el póster: con `auto` su propio min(100%, …) se resolvía
-       contra la columna y la columna contra él, y quedaba en nada. */
-    grid-template-columns: minmax(0, 1fr) min(420px, 52svh);
-    align-items: start;
-  }
 
-  .app__laminas > .dialogo__error {
-    grid-column: 1 / -1;
-  }
-}
 
 .poster {
   container-type: inline-size;
-  /* El póster mide 1.7 de alto por 1 de ancho, así que a 620px pedía 1060px de
-     alto y nunca cabía. El tercer término lo ata a la altura de la pantalla:
-     52svh de ancho deja el alto en ~88vh, con o sin barras del navegador. */
-  width: min(100%, 620px);
-  width: min(100%, 620px, 52svh);
+  /* El póster es la pieza: sus casillas son las que se tocan y las que salen
+     en el PNG. Ancho completo en móvil y hasta 720px en escritorio; que no
+     quepa de una pantalla es scroll, no un problema de diseño. */
+  width: min(100%, 720px);
   padding: 5cqi 4cqi 6cqi;
   background: var(--vino);
   color: var(--crema);
@@ -653,16 +639,30 @@ body {
    Cada estado solo define --relleno; los estilos de abajo lo usan sin saber
    cuál es, por eso una celda libre (--relleno: crema) queda lisa sola. */
 .celda--apartado {
-  --relleno: var(--rosa-claro);
+  /* Un tercio de acento: --rosa-claro contra --rosa quedaban casi iguales, y
+     con la paleta oscura ni eso. El borde punteado remata la diferencia. */
+  --relleno: color-mix(in srgb, var(--rosa) 32%, var(--crema));
   color: var(--vino);
-  font-weight: 600;
+  font-weight: 500;
   border-style: dashed;
+  border-width: 2px;
 }
 
 .celda--pagado {
   --relleno: var(--rosa);
   color: var(--vino);
-  font-weight: 600;
+  font-weight: 700;
+  border-style: solid;
+}
+
+/* Tapados los números, la marca carga la diferencia: tenue si solo está
+   apartado, a fondo si ya pagó. */
+.celda--apartado .celda__marca {
+  opacity: 0.45;
+}
+
+.celda--pagado .celda__marca {
+  opacity: 1;
 }
 
 .celda--solido {
@@ -688,14 +688,6 @@ body {
   width: 2em;
   height: 2em;
   transform: rotate(-15deg);
-}
-
-.celda--sello.celda--apartado .celda__marca {
-  opacity: 0.45;
-}
-
-.celda--sello.celda--pagado .celda__marca {
-  opacity: 0.8;
 }
 
 .celda--ganadora {
@@ -728,130 +720,34 @@ body {
 }
 
 
-/* ---------- tablero tocable (solo móvil) ----------
-   El del póster no se puede agrandar: se exporta tal cual y el PNG saldría con
-   otra retícula. Este vive fuera del póster, con los colores del chrome. */
-
-.tablerapp {
-  display: grid;
-  width: 100%;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: var(--tarjeta);
-  border: 1px solid var(--borde);
-  border-radius: 14px;
-  box-shadow: 0 1px 2px rgb(90 70 30 / 0.05), 0 10px 24px rgb(90 70 30 / 0.06);
-}
-
-.tablerapp__titulo {
-  margin: 0;
-  font-family: var(--serif);
-  font-size: 1.15rem;
-}
-
-.tablero--app {
-  width: 100%;
-  margin: 0;
-  gap: 0.4rem;
-  grid-template-columns: repeat(10, 1fr);
-}
-
-/* 5 columnas: parte las decenas por la mitad y deja la casilla sobre 60px. */
-@media (max-width: 560px) {
-  .tablero--app {
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
-
-.tablero--app .celda {
-  /* Sin aspect-ratio: cuadradas y a 5 columnas la lista medía 20 pantallas.
-     48px de alto siguen siendo un blanco cómodo para el pulgar. */
-  aspect-ratio: auto;
-  min-height: 3rem;
-  border-radius: 10px;
-  border: 1px solid var(--borde);
-  background: #ffffff;
-  box-shadow: none;
-  color: var(--tinta);
-  font-size: 1.05rem;
-  font-weight: 500;
-  transition: transform 0.12s;
-}
-
-.tablero--app .celda:hover {
-  background: #fff8e9;
-  transform: none;
-}
-
-.tablero--app .celda:active {
-  transform: scale(0.94);
-}
-
-.tablero--app .celda:focus-visible {
-  outline: 2px solid var(--acento-oscuro);
-  outline-offset: 2px;
-}
-
-/* Los tres estados con relleno propio: de un vistazo se ven distintos aunque
-   la rifa use el estilo de casilla rayado o de contorno en el póster. */
-.tablero--app .celda--apartado {
-  background: #fde3ac;
-  border: 1px dashed var(--acento-oscuro);
-  color: #7a4a00;
-  font-weight: 600;
-}
-
-.tablero--app .celda--pagado {
-  background: #4a4a2e;
-  border-color: #4a4a2e;
-  color: #fffdf9;
-  font-weight: 600;
-}
-
-.tablero--app .celda--ganadora {
-  background: #ffd97a;
-  border-color: #6b4b00;
-  color: #6b4b00;
-}
-
-.tablero--app .celda__marca {
-  width: 1.4em;
-  height: 1.4em;
-}
-
 .leyenda {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 1rem;
+  justify-content: center;
+  gap: 0.5rem 1.1rem;
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 
 .leyenda li {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
 }
 
-.leyenda li::before {
-  content: '';
-  width: 0.95rem;
-  height: 0.95rem;
-  border-radius: 4px;
-  border: 1px solid var(--borde);
-  background: #ffffff;
+/* La casilla real, no un cuadro pintado aparte: así la muestra cambia con el
+   estilo, la marca y la paleta que se elijan. Fuera del póster no hay
+   contenedor de consultas, por eso el tamaño va en rem y no en cqi. */
+.leyenda .celda {
+  width: 2.2rem;
+  font-size: 0.8rem;
+  cursor: default;
 }
 
-.leyenda li.leyenda__apartado::before {
-  background: #fde3ac;
-  border: 1px dashed var(--acento-oscuro);
-}
-
-.leyenda li.leyenda__pagado::before {
-  background: #4a4a2e;
-  border-color: #4a4a2e;
+.leyenda .celda:hover {
+  transform: none;
 }
 
 /* ---------- pie del póster ---------- */
@@ -1074,23 +970,6 @@ body {
   background: var(--acento);
   color: var(--tinta-boton);
   border-color: var(--acento-oscuro);
-}
-
-/* Muestra en vivo de los tres estados, con el tamaño real de una casilla. */
-.panel__muestra {
-  display: flex;
-  gap: 0.35rem;
-  margin-top: -0.25rem;
-}
-
-.panel__muestra .celda {
-  width: 2.6rem;
-  font-size: 0.85rem;
-  cursor: default;
-}
-
-.panel__muestra .celda:hover {
-  transform: none;
 }
 
 .paleta {
