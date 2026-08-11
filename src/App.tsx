@@ -24,7 +24,9 @@ export default function App() {
   useTema(rifa.estado.config.paleta, rifa.estado.config.tipografia);
 
   const [seleccion, setSeleccion] = useState<number | null>(null);
-  const [panelAbierto, setPanelAbierto] = useState(true);
+  // Cerrado en móvil: abierto sumaba dos pantallas de formulario antes de
+  // llegar al tablero, que es a lo que se entra el 90% de las veces.
+  const [panelAbierto, setPanelAbierto] = useState(() => window.innerWidth > 900);
   const [exportando, setExportando] = useState<string | null>(null);
   const [errorExport, setErrorExport] = useState<string | null>(null);
   const [imagen, setImagen] = useState<Imagen | null>(null);
@@ -157,9 +159,8 @@ export default function App() {
       ) : (
         <div className="app__laminas">
           {errorExport && <p className="dialogo__error">{errorExport}</p>}
-          {cerrado && <Ganador ref={ganadorRef} estado={rifa.estado} verNombre={rifa.puedeEditar} />}
-          {/* En móvil las casillas del póster quedan de 34px: este tablero es el
-              que se toca, y el póster de abajo queda como la imagen a compartir. */}
+          {/* El póster se achica para caber en pantalla, así que las casillas que
+              se tocan son las de este tablero; el póster queda de imagen. */}
           <section className="tablerapp">
             <h2 className="tablerapp__titulo">Elige tu número</h2>
             <Tablero estado={rifa.estado} onSeleccionar={setSeleccion} variante="app" />
@@ -169,7 +170,13 @@ export default function App() {
               <li className="leyenda__pagado">Pagado</li>
             </ul>
           </section>
-          <Poster ref={posterRef} estado={rifa.estado} onSeleccionar={setSeleccion} />
+
+          <div className="app__poster">
+            {cerrado && (
+              <Ganador ref={ganadorRef} estado={rifa.estado} verNombre={rifa.puedeEditar} />
+            )}
+            <Poster ref={posterRef} estado={rifa.estado} onSeleccionar={setSeleccion} />
+          </div>
         </div>
       )}
 

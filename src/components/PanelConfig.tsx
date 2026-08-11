@@ -30,6 +30,7 @@ type Props = {
 const PESTANAS = [
   { id: 'sorteo', titulo: 'Sorteo' },
   { id: 'diseno', titulo: 'Diseño' },
+  { id: 'colores', titulo: 'Colores' },
   { id: 'mensaje', titulo: 'Mensaje' },
   { id: 'caja', titulo: 'Caja' },
   { id: 'cierre', titulo: 'Cierre' },
@@ -215,7 +216,11 @@ export function PanelConfig({
             ))}
           </div>
           <p className="panel__nota">Muestra: libre · apartado · pagado</p>
+        </section>
+      )}
 
+      {pestana === 'colores' && (
+        <section className="panel__seccion">
           <p className="panel__etiqueta">Fondo decorativo</p>
           <div className="panel__fondos">
             {FONDOS.map((f) => (

@@ -38,7 +38,7 @@ body {
 }
 
 .app--panel {
-  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
   align-items: start;
 }
 
@@ -394,9 +394,37 @@ body {
   width: 100%;
 }
 
+.app__poster {
+  display: grid;
+  gap: 1.5rem;
+  justify-items: center;
+  /* Sin ancho propio el envoltorio se encoge al contenido y el min(100%, …)
+     del póster se resuelve contra nada. */
+  width: 100%;
+}
+
+/* Con sitio de sobra el tablero y el póster van lado a lado: se ve el número
+   que se toca y la boleta al tiempo, sin scroll entre uno y otro. */
+@media (min-width: 1200px) {
+  .app__laminas {
+    /* Ancho fijo para el póster: con `auto` su propio min(100%, …) se resolvía
+       contra la columna y la columna contra él, y quedaba en nada. */
+    grid-template-columns: minmax(0, 1fr) min(420px, 52svh);
+    align-items: start;
+  }
+
+  .app__laminas > .dialogo__error {
+    grid-column: 1 / -1;
+  }
+}
+
 .poster {
   container-type: inline-size;
+  /* El póster mide 1.7 de alto por 1 de ancho, así que a 620px pedía 1060px de
+     alto y nunca cabía. El tercer término lo ata a la altura de la pantalla:
+     52svh de ancho deja el alto en ~88vh, con o sin barras del navegador. */
   width: min(100%, 620px);
+  width: min(100%, 620px, 52svh);
   padding: 5cqi 4cqi 6cqi;
   background: var(--vino);
   color: var(--crema);
@@ -694,7 +722,7 @@ body {
    otra retícula. Este vive fuera del póster, con los colores del chrome. */
 
 .tablerapp {
-  display: none;
+  display: grid;
   width: 100%;
   gap: 0.75rem;
   padding: 1rem;
@@ -721,12 +749,6 @@ body {
 @media (max-width: 560px) {
   .tablero--app {
     grid-template-columns: repeat(5, 1fr);
-  }
-}
-
-@media (max-width: 900px) {
-  .tablerapp {
-    display: grid;
   }
 }
 

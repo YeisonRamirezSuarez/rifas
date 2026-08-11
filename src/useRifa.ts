@@ -418,10 +418,12 @@ export function useRifa() {
         options: { data: { nombre } },
       });
       if (error) return error.message;
-      // Con confirmación de correo activada no hay sesión hasta que el usuario confirme.
+      // Sin sesión = el proyecto todavía tiene *Confirm email* activo en Supabase.
+      // Con esa opción puesta no hay token, y sin token no sale el correo de
+      // Brevo ni se registra la solicitud: hay que apagarla en el panel.
       return data.session
         ? null
-        : 'Cuenta creada. Confirma tu correo y luego entra: la activamos a mano.';
+        : 'Cuenta creada, pero falta confirmar el correo desde el mensaje de Supabase. Avísale al administrador para desactivar esa confirmación.';
     },
     [],
   );
