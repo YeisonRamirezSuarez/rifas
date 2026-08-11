@@ -796,6 +796,14 @@ body {
   text-indent: 0.16em;
 }
 
+.poster__responsable {
+  margin: 1.5cqi 0 0;
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 7cqi;
+  line-height: 1.1;
+}
+
 /* ---------- lámina del ganador ---------- */
 
 .ganador {

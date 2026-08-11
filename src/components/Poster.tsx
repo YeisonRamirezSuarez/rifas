@@ -61,6 +61,7 @@ export const Poster = forwardRef<HTMLElement, Props>(function Poster(
         <p className="poster__contacto">
           {c.etiquetaContacto}: {c.contacto}
         </p>
+        {c.responsable && <p className="poster__responsable">{c.responsable}</p>}
       </footer>
     </article>
   );

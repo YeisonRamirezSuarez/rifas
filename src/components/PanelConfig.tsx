@@ -137,6 +137,14 @@ export function PanelConfig({
             Mensaje del pie
             <input value={c.mensaje} onChange={(e) => set('mensaje', e.target.value)} />
           </label>
+          <label>
+            Nombre del responsable
+            <input
+              value={c.responsable}
+              onChange={(e) => set('responsable', e.target.value)}
+              placeholder="Leidy Gómez"
+            />
+          </label>
           <div className="panel__fila">
             <label>
               Etiqueta del contacto

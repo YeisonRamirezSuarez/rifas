@@ -22,6 +22,7 @@ export type Config = {
   moneda: string;
   etiquetaContacto: string;
   contacto: string;
+  responsable: string;
   mensaje: string;
   totalNumeros: number;
   ocultarVendidos: boolean; // "tapado": esconde el número vendido
@@ -77,6 +78,7 @@ export const CONFIG_INICIAL: Config = {
   moneda: 'COP',
   etiquetaContacto: 'contacto',
   contacto: '3162123456',
+  responsable: '',
   mensaje: 'gracias por tu compra',
   totalNumeros: 100,
   ocultarVendidos: true,
