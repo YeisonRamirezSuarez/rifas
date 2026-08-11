@@ -9,6 +9,7 @@ import { Onboarding } from './components/Onboarding';
 import { PanelConfig } from './components/PanelConfig';
 import { PanelSuperadmin } from './components/PanelSuperadmin';
 import { Poster } from './components/Poster';
+import { Tablero } from './components/Tablero';
 import { generarPng, type Imagen } from './exportar';
 import { enviarCorreo } from './correos';
 import { useConfirmar } from './useConfirmar';
@@ -85,6 +86,7 @@ export default function App() {
     <main className={`app${mostrarPanel ? ' app--panel' : ''}`}>
       {rifa.haySesion && cuenta.aprobado && (
         <div className="app__barra">
+          <img src="/logo.svg" alt="Rifas" className="app__logo" />
           <button type="button" onClick={() => setPanelAbierto((v) => !v)}>
             {panelAbierto ? 'Ocultar configuración' : 'Configurar rifa'}
           </button>
@@ -150,6 +152,17 @@ export default function App() {
         <div className="app__laminas">
           {errorExport && <p className="dialogo__error">{errorExport}</p>}
           {cerrado && <Ganador ref={ganadorRef} estado={rifa.estado} verNombre={rifa.puedeEditar} />}
+          {/* En móvil las casillas del póster quedan de 34px: este tablero es el
+              que se toca, y el póster de abajo queda como la imagen a compartir. */}
+          <section className="tablerapp">
+            <h2 className="tablerapp__titulo">Elige tu número</h2>
+            <Tablero estado={rifa.estado} onSeleccionar={setSeleccion} variante="app" />
+            <ul className="leyenda">
+              <li className="leyenda__libre">Libre</li>
+              <li className="leyenda__apartado">Apartado</li>
+              <li className="leyenda__pagado">Pagado</li>
+            </ul>
+          </section>
           <Poster ref={posterRef} estado={rifa.estado} onSeleccionar={setSeleccion} />
         </div>
       )}

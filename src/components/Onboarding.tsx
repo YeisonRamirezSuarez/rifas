@@ -28,7 +28,10 @@ export function Onboarding({ entrar, registrarse }: Props) {
   return (
     <div className="onb">
       <section className="onb__pitch">
-        <p className="onb__marca">Rifas</p>
+        <p className="onb__marca">
+          <img src="/logo.svg" alt="" className="onb__logo" />
+          Rifas
+        </p>
         <h1 className="onb__titulo">
           Tu rifa,
           <span> organizada de verdad</span>

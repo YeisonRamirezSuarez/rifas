@@ -1,4 +1,14 @@
 :root {
+  /* Chrome de la app: fijo y en pastel. Las variables de abajo (--vino, --rosa,
+     --crema) las pisa useTema con la paleta elegida y solo visten la boleta. */
+  --fondo: #faf3e8;
+  --tarjeta: #fffdf9;
+  --tinta: #3a3a2a;
+  --tinta-boton: #4a3208;
+  --acento: #f5a623;
+  --acento-oscuro: #b56a06;
+  --borde: #e6dbc7;
+
   --vino: #63302f;
   --vino-oscuro: #4a2123;
   --rosa: #f2a2a2;
@@ -14,8 +24,8 @@
 
 body {
   margin: 0;
-  background: var(--vino-oscuro);
-  color: var(--crema);
+  background: var(--fondo);
+  color: var(--tinta);
   font-family: var(--sans);
   -webkit-text-size-adjust: 100%;
 }
@@ -38,6 +48,12 @@ body {
   justify-self: start;
   display: flex;
   gap: 0.5rem;
+}
+
+.app__logo {
+  width: 2.1rem;
+  height: 2.1rem;
+  align-self: center;
 }
 
 .app__cargando {
@@ -81,11 +97,19 @@ body {
 }
 
 .onb__marca {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   margin: 0 0 0.75rem;
   font-size: 0.8rem;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: var(--rosa);
+  color: var(--acento-oscuro);
+}
+
+.onb__logo {
+  width: 2.6rem;
+  height: 2.6rem;
 }
 
 .onb__titulo {
@@ -98,7 +122,7 @@ body {
 .onb__titulo span {
   display: block;
   font-style: italic;
-  color: var(--rosa);
+  color: var(--acento-oscuro);
 }
 
 .onb__bajada {
@@ -121,7 +145,7 @@ body {
   font-family: var(--serif);
   font-size: clamp(2.6rem, 8vw, 3.6rem);
   font-weight: 700;
-  color: var(--rosa);
+  color: var(--acento-oscuro);
 }
 
 .onb__precio-nota {
@@ -156,7 +180,7 @@ body {
   width: 1.4rem;
   height: 1.4rem;
   margin-top: 0.05rem;
-  color: var(--rosa);
+  color: var(--acento-oscuro);
   opacity: 1;
 }
 
@@ -216,7 +240,7 @@ body {
   margin: 0.5rem 0 0;
   font-family: var(--serif);
   font-size: 1.05rem;
-  color: var(--rosa);
+  color: var(--acento-oscuro);
 }
 
 /* ---------- cuentas (superadmin) ---------- */
@@ -229,8 +253,8 @@ body {
   margin-left: 0.5rem;
   padding: 0 0.35rem;
   border-radius: 999px;
-  background: var(--rosa);
-  color: var(--vino);
+  background: var(--acento);
+  color: var(--tinta-boton);
   font-family: var(--sans);
   font-size: 0.75rem;
   font-weight: 600;
@@ -250,7 +274,7 @@ body {
   display: grid;
   gap: 0.5rem;
   padding: 0.6rem 0.75rem;
-  border: 1px solid #ffffff1f;
+  border: 1px solid var(--borde);
   border-radius: 8px;
 }
 
@@ -282,14 +306,14 @@ body {
 .barra {
   height: 5px;
   border-radius: 999px;
-  background: #ffffff1f;
+  background: #00000014;
   overflow: hidden;
 }
 
 .barra span {
   display: block;
   height: 100%;
-  background: var(--rosa);
+  background: var(--acento);
 }
 
 .app__columna {
@@ -322,7 +346,7 @@ body {
   width: 100%;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  border-color: #ffffff26;
+  border-color: var(--borde);
   text-align: left;
   font-size: 0.8rem;
 }
@@ -333,9 +357,9 @@ body {
 }
 
 .misrifas__item--activa {
-  background: var(--rosa);
-  color: var(--vino);
-  border-color: var(--rosa);
+  background: var(--acento);
+  color: var(--tinta-boton);
+  border-color: var(--acento-oscuro);
 }
 
 .misrifas__nueva {
@@ -659,6 +683,139 @@ body {
   flex: none;
 }
 
+
+/* ---------- tablero tocable (solo móvil) ----------
+   El del póster no se puede agrandar: se exporta tal cual y el PNG saldría con
+   otra retícula. Este vive fuera del póster, con los colores del chrome. */
+
+.tablerapp {
+  display: none;
+  width: 100%;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(90 70 30 / 0.05), 0 10px 24px rgb(90 70 30 / 0.06);
+}
+
+.tablerapp__titulo {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+}
+
+.tablero--app {
+  width: 100%;
+  margin: 0;
+  gap: 0.4rem;
+  grid-template-columns: repeat(10, 1fr);
+}
+
+/* 5 columnas: parte las decenas por la mitad y deja la casilla sobre 60px. */
+@media (max-width: 560px) {
+  .tablero--app {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .tablerapp {
+    display: grid;
+  }
+}
+
+.tablero--app .celda {
+  /* Sin aspect-ratio: cuadradas y a 5 columnas la lista medía 20 pantallas.
+     48px de alto siguen siendo un blanco cómodo para el pulgar. */
+  aspect-ratio: auto;
+  min-height: 3rem;
+  border-radius: 10px;
+  border: 1px solid var(--borde);
+  background: #ffffff;
+  box-shadow: none;
+  color: var(--tinta);
+  font-size: 1.05rem;
+  font-weight: 500;
+  transition: transform 0.12s;
+}
+
+.tablero--app .celda:hover {
+  background: #fff8e9;
+  transform: none;
+}
+
+.tablero--app .celda:active {
+  transform: scale(0.94);
+}
+
+.tablero--app .celda:focus-visible {
+  outline: 2px solid var(--acento-oscuro);
+  outline-offset: 2px;
+}
+
+/* Los tres estados con relleno propio: de un vistazo se ven distintos aunque
+   la rifa use el estilo de casilla rayado o de contorno en el póster. */
+.tablero--app .celda--apartado {
+  background: #fde3ac;
+  border: 1px dashed var(--acento-oscuro);
+  color: #7a4a00;
+  font-weight: 600;
+}
+
+.tablero--app .celda--pagado {
+  background: #4a4a2e;
+  border-color: #4a4a2e;
+  color: #fffdf9;
+  font-weight: 600;
+}
+
+.tablero--app .celda--ganadora {
+  background: #ffd97a;
+  border-color: #6b4b00;
+  color: #6b4b00;
+}
+
+.tablero--app .celda__marca {
+  width: 1.4em;
+  height: 1.4em;
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+}
+
+.leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.leyenda li::before {
+  content: '';
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 4px;
+  border: 1px solid var(--borde);
+  background: #ffffff;
+}
+
+.leyenda li.leyenda__apartado::before {
+  background: #fde3ac;
+  border: 1px dashed var(--acento-oscuro);
+}
+
+.leyenda li.leyenda__pagado::before {
+  background: #4a4a2e;
+  border-color: #4a4a2e;
+}
+
 /* ---------- pie del póster ---------- */
 
 .poster__pie {
@@ -790,9 +947,10 @@ body {
   display: grid;
   gap: 0.75rem;
   padding: 1.25rem;
-  background: #ffffff0f;
-  border: 1px solid #ffffff1f;
-  border-radius: 12px;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(90 70 30 / 0.05), 0 10px 24px rgb(90 70 30 / 0.06);
 }
 
 .panel__titulo {
@@ -805,7 +963,7 @@ body {
   display: flex;
   flex-wrap: wrap; /* envuelven en dos filas; nada de scroll horizontal */
   gap: 0.25rem;
-  border-bottom: 1px solid #ffffff26;
+  border-bottom: 1px solid var(--borde);
   padding-bottom: 0.5rem;
 }
 
@@ -819,8 +977,8 @@ body {
 }
 
 .panel__tab--activa {
-  background: var(--rosa);
-  color: var(--vino);
+  background: var(--acento);
+  color: var(--tinta-boton);
   font-weight: 600;
   opacity: 1;
 }
@@ -850,13 +1008,13 @@ body {
   flex: 1 1 auto;
   padding: 0.35rem 0.7rem;
   font-size: 0.75rem;
-  border-color: #ffffff30;
+  border-color: var(--borde);
 }
 
 .panel__opcion--activa {
-  background: var(--rosa);
-  color: var(--vino);
-  border-color: var(--rosa);
+  background: var(--acento);
+  color: var(--tinta-boton);
+  border-color: var(--acento-oscuro);
   font-weight: 600;
 }
 
@@ -865,8 +1023,8 @@ body {
   height: 2.4rem;
   padding: 0.4rem;
   border-radius: 8px;
-  border-color: #ffffff30;
-  color: var(--crema);
+  border-color: var(--borde);
+  color: var(--tinta);
 }
 
 .marca svg {
@@ -875,9 +1033,9 @@ body {
 }
 
 .marca--activa {
-  background: var(--rosa);
-  color: var(--vino);
-  border-color: var(--rosa);
+  background: var(--acento);
+  color: var(--tinta-boton);
+  border-color: var(--acento-oscuro);
 }
 
 /* Muestra en vivo de los tres estados, con el tamaño real de una casilla. */
@@ -916,8 +1074,8 @@ body {
 }
 
 .paleta--activa {
-  border-color: var(--crema);
-  box-shadow: 0 0 0 2px var(--rosa);
+  border-color: var(--tinta);
+  box-shadow: 0 0 0 2px var(--acento);
 }
 
 .panel__fila {
@@ -966,7 +1124,7 @@ body {
 .panel__caja th,
 .panel__caja td {
   padding: 0.35rem 0.25rem;
-  border-bottom: 1px solid #ffffff1a;
+  border-bottom: 1px solid var(--borde);
   text-align: right;
   font-weight: 400;
 }
@@ -978,7 +1136,7 @@ body {
 .panel__caja-total th,
 .panel__caja-total td {
   font-weight: 700;
-  color: var(--rosa-claro);
+  color: var(--acento-oscuro);
 }
 
 .panel__fila--fin {
@@ -1017,9 +1175,9 @@ select,
 textarea {
   width: 100%;
   padding: 0.5rem 0.6rem;
-  border: 1px solid #ffffff30;
+  border: 1px solid var(--borde);
   border-radius: 6px;
-  background: #ffffff12;
+  background: #ffffff;
   color: inherit;
   font: inherit;
   font-size: 1rem; /* 16px evita el zoom automático de iOS al enfocar */
@@ -1033,7 +1191,7 @@ input[type='checkbox'] {
   height: 1.05rem;
   flex: none;
   margin: 0;
-  accent-color: var(--rosa);
+  accent-color: var(--acento-oscuro);
 }
 
 textarea {
@@ -1046,14 +1204,14 @@ textarea {
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--rosa);
+  outline: 2px solid var(--acento);
 }
 
 .panel__previo {
   margin: -0.35rem 0 0;
   padding: 0.6rem 0.75rem;
-  border-left: 2px solid var(--rosa);
-  background: #ffffff0d;
+  border-left: 2px solid var(--acento);
+  background: #f7f0e4;
   border-radius: 0 6px 6px 0;
   font-size: 0.78rem;
   line-height: 1.45;
@@ -1068,10 +1226,10 @@ option {
 button,
 .boton {
   padding: 0.55rem 0.9rem;
-  border: 1px solid var(--rosa);
+  border: 1px solid var(--acento);
   border-radius: 999px;
   background: transparent;
-  color: var(--crema);
+  color: var(--tinta);
   font: inherit;
   font-size: 0.85rem;
   cursor: pointer;
@@ -1081,18 +1239,18 @@ button,
 
 button:hover,
 .boton:hover {
-  background: #f2a2a222;
+  background: #f5a6231f;
 }
 
 .boton--primario {
-  background: var(--rosa);
-  color: var(--vino);
+  background: var(--acento);
+  color: var(--tinta-boton);
   font-weight: 600;
 }
 
 .boton--peligro {
-  border-color: #e08585;
-  color: #ffd4d4;
+  border-color: #d0554d;
+  color: #a1281f;
 }
 
 /* ---------- diálogo ---------- */
@@ -1100,10 +1258,11 @@ button:hover,
 .dialogo {
   width: min(92vw, 380px);
   padding: 1.5rem;
-  border: 1px solid var(--rosa);
-  border-radius: 14px;
-  background: var(--vino);
-  color: var(--crema);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgb(60 45 15 / 0.25);
+  background: var(--tarjeta);
+  color: var(--tinta);
   position: relative;
 }
 
@@ -1154,7 +1313,7 @@ button:hover,
 
 .dialogo__error {
   margin: 0;
-  color: #ffd4d4;
+  color: #a1281f;
   font-size: 0.85rem;
 }
 
@@ -1176,4 +1335,46 @@ button:hover,
   height: 2rem;
   padding: 0;
   border-color: transparent;
+}
+
+/* En móvil el diálogo es una hoja pegada abajo: nace donde está el pulgar y
+   los botones dejan de ser dos blancos de 2rem uno al lado del otro. */
+@media (max-width: 560px) {
+  .dialogo,
+  .dialogo--imagen,
+  .dialogo--confirmar {
+    /* 100% y no 100vw: 100vw cuenta la barra de scroll y saca scroll horizontal. */
+    width: 100%;
+    max-width: none;
+    /* fixed: el .dialogo base es relative y eso pisa el position del navegador
+       para un diálogo modal, así que la hoja se iba con el scroll. */
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    margin: 0;
+    padding: 1.25rem 1.1rem calc(1.1rem + env(safe-area-inset-bottom));
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+  }
+
+  /* Invertido: la acción principal queda arriba, lejos del borde de la pantalla. */
+  .dialogo__acciones {
+    flex-direction: column-reverse;
+    gap: 0.6rem;
+  }
+
+  .dialogo__acciones > * {
+    min-height: 3rem;
+  }
+
+  .dialogo__pagos button {
+    min-height: 2.75rem;
+  }
+
+  .dialogo__cerrar {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
 }

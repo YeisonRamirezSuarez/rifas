@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Tómbola de rifas">
+  <title>Tómbola</title>
+  <style>
+    /* Animación en CSS y no en SMIL: así también corre dentro de &lt;img&gt; y de la pestaña. */
+    .tomb { transform-origin: 32px 30px; animation: mecer 3.2s ease-in-out infinite; }
+    .bola { transform-box: fill-box; transform-origin: center; animation: brincar 1.6s ease-in-out infinite; }
+    .b2 { animation-delay: -0.35s; }
+    .b3 { animation-delay: -0.7s; }
+    .b4 { animation-delay: -1.05s; }
+    .b5 { animation-delay: -1.4s; }
+    .premio { transform-box: fill-box; transform-origin: center; animation: caer 3.2s ease-in-out infinite; }
+
+    @keyframes mecer {
+      0%, 100% { transform: rotate(-7deg); }
+      50% { transform: rotate(7deg); }
+    }
+    @keyframes brincar {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-2.2px) scale(1.06); }
+    }
+    /* La bola premiada sale por la boquilla, cae y vuelve a esconderse. */
+    @keyframes caer {
+      0%, 55% { transform: translateY(-6px) scale(0.5); opacity: 0; }
+      70% { transform: translateY(0) scale(1); opacity: 1; }
+      92% { transform: translateY(9px) scale(1); opacity: 1; }
+      100% { transform: translateY(13px) scale(0.9); opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .tomb, .bola, .premio { animation: none; }
+      .premio { opacity: 1; }
+    }
+  </style>
+
+  <defs>
+    <clipPath id="dentro"><circle cx="32" cy="30" r="19" /></clipPath>
+  </defs>
+
+  <!-- pata y boquilla: la tómbola se apoya y suelta la bola por abajo -->
+  <path d="M26 50h12l-6 8z" fill="#4a4a2e" />
+  <rect x="28.5" y="47" width="7" height="4" rx="1.4" fill="#4a4a2e" />
+
+  <g class="tomb">
+    <circle cx="32" cy="30" r="19" fill="#fff6e4" />
+
+    <g clip-path="url(#dentro)">
+      <circle class="bola b1" cx="24" cy="25" r="7" fill="#f5a623" />
+      <circle class="bola b2" cx="39" cy="27" r="6" fill="#ffc65a" />
+      <circle class="bola b3" cx="31" cy="38" r="6.5" fill="#e8890b" />
+    </g>
+
+    <!-- dos flejes, no tres: a 16px el tercero convertía la tómbola en un rayado -->
+    <g fill="none" stroke="#4a4a2e" stroke-width="3" stroke-linecap="round">
+      <path d="M14 25c11 4.5 25 4.5 36 0" />
+      <path d="M15 37c10.5 4 21.5 4 32 0" />
+    </g>
+    <circle cx="32" cy="30" r="19" fill="none" stroke="#4a4a2e" stroke-width="4" />
+
+    <!-- manija -->
+    <path d="M51 27c3.5-1 3.5 3 0 3s-3.5 4 0 3" fill="none" stroke="#4a4a2e" stroke-width="3" stroke-linecap="round" />
+  </g>
+
+  <circle class="premio" cx="32" cy="55" r="4.6" fill="#f5a623" stroke="#4a4a2e" stroke-width="2" />
+</svg>
