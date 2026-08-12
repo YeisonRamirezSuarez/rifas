@@ -1,0 +1,15 @@
+{
+  "name": "Rifas",
+  "short_name": "Rifas",
+  "description": "Arma la rifa, vende los números y comparte el póster.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f4f0",
+  "theme_color": "#14383D",
+  "lang": "es",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "type": "image/png", "sizes": "180x180" },
+    { "src": "/icono.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" }
+  ]
+}

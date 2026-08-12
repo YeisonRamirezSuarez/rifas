@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Rifas">
+  <title>Rifas</title>
+  <!--
+    Icono de aplicación: la misma tómbola del logo, pero quieta y sobre fondo
+    opaco. iOS compone el icono anclado sobre negro, así que un PNG con
+    transparencia sale con el dibujo flotando en un cuadro oscuro. El logo
+    animado sigue siendo logo.svg; este es el que se rasteriza.
+  -->
+  <rect width="64" height="64" fill="#f4f1ea" />
+
+  <!-- El dibujo se encoge al 80%: anclado, el sistema recorta las esquinas y
+       sin margen la manivela y la base quedaban cortadas. -->
+  <g transform="translate(32 33) scale(0.8) translate(-32 -33)">
+    <g stroke="#14383d" stroke-width="3.4" stroke-linecap="round">
+      <path d="M28 48l-5.5 8.5" />
+      <path d="M36 48l5.5 8.5" />
+    </g>
+    <rect x="19" y="56.5" width="26" height="3.6" rx="1.8" fill="#14383d" />
+    <rect x="28.5" y="46" width="7" height="4.5" rx="1.4" fill="#14383d" />
+
+    <circle cx="32" cy="30" r="19" fill="#ffffff" />
+
+    <g clip-path="url(#dentro-icono)">
+      <circle cx="24" cy="25" r="7" fill="#d0a24c" />
+      <circle cx="39" cy="27" r="6" fill="#e6c88b" />
+      <circle cx="31" cy="38" r="6.5" fill="#a8702a" />
+    </g>
+
+    <g fill="none" stroke="#14383d" stroke-width="3" stroke-linecap="round">
+      <path d="M14 25c11 4.5 25 4.5 36 0" />
+      <path d="M15 37c10.5 4 21.5 4 32 0" />
+    </g>
+    <circle cx="32" cy="30" r="19" fill="none" stroke="#14383d" stroke-width="4" />
+
+    <path d="M50 30h5" fill="none" stroke="#14383d" stroke-width="3" stroke-linecap="round" />
+    <circle cx="57.5" cy="30" r="2.8" fill="#14383d" />
+
+    <circle cx="32" cy="55" r="4.6" fill="#d0a24c" stroke="#14383d" stroke-width="2" />
+  </g>
+
+  <defs>
+    <clipPath id="dentro-icono"><circle cx="32" cy="30" r="16.5" /></clipPath>
+  </defs>
+</svg>
