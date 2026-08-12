@@ -367,3 +367,30 @@ export function clientes(estado: Estado): Cliente[] {
   }
   return [...porTelefono.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
 }
+
+export type Venta = { nombre: string; telefono: string; numeros: number[]; pendientes: number };
+
+/**
+ * Los compradores con todos sus números juntos, para cobrar sin ir número por
+ * número en el tablero. Primero quien todavía debe: es a quien hay que buscar.
+ */
+export function ventas(estado: Estado): Venta[] {
+  const porPersona = new Map<string, Venta>();
+  const tickets = Object.values(estado.tickets).sort((a, b) => a.numero - b.numero);
+  for (const t of tickets) {
+    // Sin teléfono (ventas viejas o importadas) el nombre hace de llave.
+    const llave = t.telefono || t.comprador.trim().toLowerCase();
+    const v = porPersona.get(llave) ?? {
+      nombre: t.comprador.trim(),
+      telefono: t.telefono,
+      numeros: [],
+      pendientes: 0,
+    };
+    v.numeros.push(t.numero);
+    if (t.pago === 'pendiente') v.pendientes++;
+    porPersona.set(llave, v);
+  }
+  return [...porPersona.values()].sort(
+    (a, b) => b.pendientes - a.pendientes || a.nombre.localeCompare(b.nombre, 'es'),
+  );
+}

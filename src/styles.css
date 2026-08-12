@@ -1382,3 +1382,63 @@ button:hover,
     height: 2.75rem;
   }
 }
+
+/* Lista de compradores: mismo código de color que el tablero (apartado punteado,
+   pagado sólido) para no aprender dos lenguajes distintos. */
+.ventas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ventas__fila {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.6rem;
+}
+
+.ventas__quien {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.9rem;
+}
+
+.ventas__quien span {
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+.ventas__nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.ventas__num {
+  min-width: 2.4rem;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ventas__num--apartado {
+  border-style: dashed;
+  border-width: 2px;
+}
+
+.ventas__num--pagado {
+  background: var(--acento);
+  color: var(--tinta-boton);
+  font-weight: 700;
+}
+
+.ventas__falta {
+  font-size: 0.8rem;
+  font-weight: 600;
+}

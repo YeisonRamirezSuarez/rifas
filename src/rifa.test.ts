@@ -24,6 +24,7 @@ import {
   taparTelefono,
   vender,
   venderVarios,
+  ventas,
 } from './rifa';
 
 const conVenta = (n: number, nombre = 'Ana') => vender(ESTADO_INICIAL, n, nombre, '3162123456');
@@ -199,5 +200,23 @@ describe('rifa', () => {
     const cerrado = finalizar(ESTADO_INICIAL, 7);
     expect(() => vender(cerrado, 12, 'Ana', '3162123456')).toThrow(/cerrado/i);
     expect(() => vender(reabrir(cerrado), 12, 'Ana', '3162123456')).not.toThrow();
+  });
+
+  it('agrupa los números por comprador y pone primero al que debe', () => {
+    let e = venderVarios(ESTADO_INICIAL, [5, 12], 'Ana Ruiz', '3001112233', 'efectivo');
+    e = vender(e, 7, 'Beto Páez', '3004445566'); // pendiente
+    e = vender(e, 3, 'Ana Ruiz', '3001112233'); // pendiente, mismo teléfono
+
+    const lista = ventas(e);
+    expect(lista.map((v) => v.nombre)).toEqual(['Ana Ruiz', 'Beto Páez']);
+    expect(lista[0].numeros).toEqual([3, 5, 12]);
+    expect(lista[0].pendientes).toBe(1);
+    expect(lista[1].pendientes).toBe(1);
+
+    // Cobrado el 3, Ana ya no debe nada y cae debajo de Beto.
+    expect(ventas(marcarPago(e, 3, 'efectivo')).map((v) => v.nombre)).toEqual([
+      'Beto Páez',
+      'Ana Ruiz',
+    ]);
   });
 });

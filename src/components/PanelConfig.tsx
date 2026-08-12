@@ -15,6 +15,7 @@ import { ESTILOS_CELDA, Icono, MARCAS } from '../marcas';
 import { PALETAS, TIPOGRAFIAS } from '../temas';
 import { CampoNumero } from './CampoNumero';
 import { Leyenda } from './Leyenda';
+import { ListaVentas } from './ListaVentas';
 
 type Props = {
   estado: Estado;
@@ -22,6 +23,8 @@ type Props = {
   finalizar: (numeroGanador: number) => Promise<string | null>;
   reabrir: () => Promise<string | null>;
   vaciarTablero: () => Promise<string | null>;
+  /** Abrir la ficha de un número desde la lista de ventas. */
+  onNumero: (numero: number) => void;
   confirmar: (titulo: string, o?: { texto?: string; aceptar?: string; peligro?: boolean }) => Promise<boolean>;
 };
 
@@ -30,6 +33,7 @@ const PESTANAS = [
   { id: 'diseno', titulo: 'Diseño' },
   { id: 'colores', titulo: 'Colores' },
   { id: 'mensaje', titulo: 'Mensaje' },
+  { id: 'ventas', titulo: 'Ventas' },
   { id: 'caja', titulo: 'Caja' },
   { id: 'cierre', titulo: 'Cierre' },
 ] as const;
@@ -43,6 +47,7 @@ export function PanelConfig({
   reabrir,
   vaciarTablero,
   confirmar,
+  onNumero,
 }: Props) {
   const c = estado.config;
   const r = reporte(estado);
@@ -295,6 +300,12 @@ export function PanelConfig({
           >
             Restaurar mensajes por defecto
           </button>
+        </section>
+      )}
+
+      {pestana === 'ventas' && (
+        <section className="panel__seccion">
+          <ListaVentas estado={estado} onNumero={onNumero} />
         </section>
       )}
 
