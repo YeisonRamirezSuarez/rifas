@@ -210,7 +210,13 @@ export default function App() {
                     <button
                       type="button"
                       className="boton--primario"
-                      onClick={() => setVenta(elegidos)}
+                      // Se limpia al abrir: los números ya viven en el diálogo, que los
+                      // muestra en el título, y así abrir la ficha de un número vendido
+                      // no se lleva por delante lo que se estaba marcando.
+                      onClick={() => {
+                        setVenta(elegidos);
+                        setElegidos([]);
+                      }}
                     >
                       Vender {elegidos.length} {elegidos.length === 1 ? 'número' : 'números'}
                     </button>
@@ -245,12 +251,7 @@ export default function App() {
         marcarPago={rifa.marcarPago}
         liberar={rifa.liberar}
         confirmar={confirmar}
-        onCerrar={() => {
-          setVenta([]);
-          // Al cerrar se limpia lo marcado pero el modo sigue puesto: casi
-          // siempre viene otro comprador con otro puñado de números.
-          if (elegidos?.length) setElegidos([]);
-        }}
+        onCerrar={() => setVenta([])}
       />
 
       {dialogoConfirmar}

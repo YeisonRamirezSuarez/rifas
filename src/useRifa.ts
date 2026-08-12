@@ -425,7 +425,13 @@ export function useRifa() {
 
   const entrar = useCallback(async (email: string, clave: string): Promise<string | null> => {
     const { error } = await nube!.auth.signInWithPassword({ email, password: clave });
-    return error ? 'Correo o contraseña incorrectos.' : null;
+    if (!error) return null;
+    // Solo la clave mala se traduce. Lo demás (proveedor de correo apagado en
+    // Supabase, límite de intentos, correo sin confirmar) se muestra tal cual:
+    // taparlo todo con "contraseña incorrecta" manda a buscar donde no es.
+    return error.code === 'invalid_credentials'
+      ? 'Correo o contraseña incorrectos.'
+      : `No se pudo entrar: ${error.message}`;
   }, []);
 
   const registrarse = useCallback(

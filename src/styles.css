@@ -400,12 +400,23 @@ body {
   max-width: 620px;
 }
 
+/* Pegada abajo mientras se elige: en el celular el tablero ocupa toda la
+   pantalla y el botón de vender quedaba a un scroll de distancia. */
 .app__multiple {
+  position: sticky;
+  bottom: 0.75rem;
+  z-index: 5;
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   justify-content: center;
   width: min(100%, 26rem);
+  padding: 0.4rem;
+  border-radius: 999px;
+  /* Opaca: pegada abajo pasa por encima de la leyenda y en semitransparente
+     se leían los dos textos encimados. */
+  background: var(--fondo);
+  box-shadow: 0 8px 24px rgb(60 45 15 / 0.28);
 }
 
 .app__multiple > * {
@@ -633,12 +644,23 @@ body {
   line-height: 1;
   cursor: pointer;
   transition: transform 0.12s, background 0.12s;
+  /* En el celular un toque tiene que valer de una: sin `manipulation` el
+     navegador espera el segundo toque para el zoom, y sin `user-select` el
+     dedo termina seleccionando el número en vez de marcar la casilla. */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.celda:hover {
-  background: var(--rosa-claro);
-  transform: scale(1.12);
-  z-index: 1;
+/* Solo donde hay mouse: en pantalla táctil el :hover se queda pegado después
+   de tocar y la casilla parece elegida sin estarlo. */
+@media (hover: hover) {
+  .celda:hover {
+    background: var(--rosa-claro);
+    transform: scale(1.12);
+    z-index: 1;
+  }
 }
 
 .celda:focus-visible {

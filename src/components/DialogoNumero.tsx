@@ -69,11 +69,8 @@ export function DialogoNumero({
   const ticket = numero !== null ? estado.tickets[numero] : undefined;
   const total = estado.config.totalNumeros;
 
-  // Quien ya compró en esta rifa. Al escribir el nombre o los primeros dígitos
-  // del teléfono, el navegador sugiere, y al elegir se llena el otro campo.
+  // Quien ya compró en esta rifa: se elige de la lista y se llenan los dos campos.
   const conocidos = clientes(estado);
-  // Dos personas con el mismo nombre y distinto teléfono: en la lista de nombres va una.
-  const porNombre = conocidos.filter((c, i) => conocidos.findIndex((o) => o.nombre === c.nombre) === i);
 
   return (
     <dialog ref={ref} className="dialogo" onClose={onCerrar}>
@@ -180,17 +177,33 @@ export function DialogoNumero({
                 else onCerrar();
               }}
             >
+              {/* Un select y no un datalist: en Safari de iPhone el datalist no
+                  existe, y el select abre la lista nativa del teléfono. */}
+              {conocidos.length > 0 && (
+                <label>
+                  Cliente que ya compró
+                  <select
+                    value={conocidos.some((c) => c.telefono === telefono) ? telefono : ''}
+                    onChange={(e) => {
+                      const c = conocidos.find((x) => x.telefono === e.target.value);
+                      setComprador(c?.nombre ?? '');
+                      setTelefono(c?.telefono ?? '');
+                    }}
+                  >
+                    <option value="">Otra persona…</option>
+                    {conocidos.map((c) => (
+                      <option key={c.telefono} value={c.telefono}>
+                        {c.nombre} · {c.telefono}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label>
                 Nombre del comprador
                 <input
                   value={comprador}
-                  list="clientes-nombre"
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setComprador(v);
-                    const c = conocidos.find((x) => x.nombre === v.trim());
-                    if (c) setTelefono(c.telefono);
-                  }}
+                  onChange={(e) => setComprador(e.target.value)}
                   autoFocus
                 />
               </label>
@@ -198,10 +211,10 @@ export function DialogoNumero({
                 Teléfono
                 <input
                   value={telefono}
-                  list="clientes-telefono"
                   onChange={(e) => {
                     const v = e.target.value;
                     setTelefono(v);
+                    // Teclear el número completo de alguien conocido también trae su nombre.
                     const c = conocidos.find((x) => x.telefono === soloDigitos(v));
                     if (c) setComprador(c.nombre);
                   }}
@@ -209,20 +222,6 @@ export function DialogoNumero({
                   placeholder="3162123456"
                 />
               </label>
-              <datalist id="clientes-nombre">
-                {porNombre.map((c) => (
-                  <option key={c.telefono} value={c.nombre}>
-                    {c.telefono}
-                  </option>
-                ))}
-              </datalist>
-              <datalist id="clientes-telefono">
-                {conocidos.map((c) => (
-                  <option key={c.telefono} value={c.telefono}>
-                    {c.nombre}
-                  </option>
-                ))}
-              </datalist>
               <label>
                 Pago
                 <select value={pago} onChange={(e) => setPago(e.target.value as Pago)}>
