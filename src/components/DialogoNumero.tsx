@@ -25,7 +25,7 @@ type Props = {
 };
 
 const NOMBRE_PAGO: Record<Pago, string> = {
-  pendiente: 'Pendiente',
+  pendiente: 'Apartado',
   efectivo: 'Efectivo',
   transferencia: 'Transferencia',
 };
@@ -49,6 +49,8 @@ export function DialogoNumero({
   const [pago, setPago] = useState<Pago>('pendiente');
   const [error, setError] = useState<string | null>(null);
   const [destapado, setDestapado] = useState(false);
+  // Cliente ya escogido de las sugerencias: deja de proponer hasta que se reescriba.
+  const [elegido, setElegido] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
@@ -63,14 +65,28 @@ export function DialogoNumero({
     setPago('pendiente');
     setError(null);
     setDestapado(false);
+    setElegido(false);
     if (!d.open) d.showModal();
   }, [clave]);
 
   const ticket = numero !== null ? estado.tickets[numero] : undefined;
   const total = estado.config.totalNumeros;
 
-  // Quien ya compró en esta rifa: se elige de la lista y se llenan los dos campos.
+  // Quien ya compró en esta rifa. Se busca escribiendo el nombre en el mismo
+  // campo de la venta: con cincuenta clientes una lista completa no se navega.
   const conocidos = clientes(estado);
+  const escrito = comprador.trim().toLowerCase();
+  const coinciden =
+    escrito.length >= 2 && !elegido
+      ? conocidos.filter((c) => c.nombre.toLowerCase().includes(escrito))
+      : [];
+  const sugerencias = coinciden.slice(0, 6);
+
+  const usarCliente = (nombre: string, telefono: string) => {
+    setComprador(nombre);
+    setTelefono(telefono);
+    setElegido(true);
+  };
 
   return (
     <dialog ref={ref} className="dialogo" onClose={onCerrar}>
@@ -113,6 +129,7 @@ export function DialogoNumero({
                     <button
                       key={p}
                       type="button"
+                      aria-pressed={ticket.pago === p}
                       className={ticket.pago === p ? 'boton--primario' : ''}
                       onClick={async () => setError(await marcarPago(numero, p))}
                     >
@@ -177,36 +194,42 @@ export function DialogoNumero({
                 else onCerrar();
               }}
             >
-              {/* Un select y no un datalist: en Safari de iPhone el datalist no
-                  existe, y el select abre la lista nativa del teléfono. */}
-              {conocidos.length > 0 && (
-                <label>
-                  Cliente que ya compró
-                  <select
-                    value={conocidos.some((c) => c.telefono === telefono) ? telefono : ''}
-                    onChange={(e) => {
-                      const c = conocidos.find((x) => x.telefono === e.target.value);
-                      setComprador(c?.nombre ?? '');
-                      setTelefono(c?.telefono ?? '');
-                    }}
-                  >
-                    <option value="">Otra persona…</option>
-                    {conocidos.map((c) => (
-                      <option key={c.telefono} value={c.telefono}>
-                        {c.nombre} · {c.telefono}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
               <label>
                 Nombre del comprador
                 <input
                   value={comprador}
-                  onChange={(e) => setComprador(e.target.value)}
+                  onChange={(e) => {
+                    setComprador(e.target.value);
+                    setElegido(false);
+                  }}
                   autoFocus
+                  autoComplete="off"
+                  placeholder={conocidos.length ? 'Escribe para buscar o crear' : 'Nombre y apellido'}
                 />
               </label>
+
+              {/* Botones y no un datalist: en Safari de iPhone el datalist no existe. */}
+              {sugerencias.length > 0 && (
+                <ul className="sugerencias">
+                  {sugerencias.map((c) => (
+                    <li key={c.telefono}>
+                      <button
+                        type="button"
+                        className="sugerencias__op"
+                        onClick={() => usarCliente(c.nombre, c.telefono)}
+                      >
+                        <strong>{c.nombre}</strong>
+                        <span>{c.telefono}</span>
+                      </button>
+                    </li>
+                  ))}
+                  {coinciden.length > sugerencias.length && (
+                    <li className="sugerencias__mas">
+                      {coinciden.length - sugerencias.length} más: sigue escribiendo el nombre.
+                    </li>
+                  )}
+                </ul>
+              )}
               <label>
                 Teléfono
                 <input
@@ -222,14 +245,25 @@ export function DialogoNumero({
                   placeholder="3162123456"
                 />
               </label>
-              <label>
-                Pago
-                <select value={pago} onChange={(e) => setPago(e.target.value as Pago)}>
-                  <option value="pendiente">Apartado, sin pagar</option>
-                  <option value="efectivo">Pagó en efectivo</option>
-                  <option value="transferencia">Pagó por transferencia</option>
-                </select>
-              </label>
+              {/* Botones y no un <select>: elegir el pago es lo que más se toca
+                  al vender, y un desplegable son dos toques y una lista tapando
+                  el formulario. */}
+              <div role="group" aria-label="Pago">
+                <p className="dialogo__etiqueta">Pago</p>
+                <div className="dialogo__pagos">
+                  {(['pendiente', ...METODOS] as Pago[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      aria-pressed={pago === p}
+                      className={pago === p ? 'boton--primario' : ''}
+                      onClick={() => setPago(p)}
+                    >
+                      {NOMBRE_PAGO[p]}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {error && <p className="dialogo__error">{error}</p>}
               <div className="dialogo__acciones">
                 <button type="submit" className="boton--primario" disabled={enviando}>

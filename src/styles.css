@@ -1,21 +1,37 @@
 :root {
-  /* Chrome de la app: fijo y en pastel. Las variables de abajo (--vino, --rosa,
-     --crema) las pisa useTema con la paleta elegida y solo visten la boleta. */
-  --fondo: #faf3e8;
-  --tarjeta: #fffdf9;
-  --tinta: #3a3a2a;
-  --tinta-boton: #4a3208;
-  --acento: #f5a623;
-  --acento-oscuro: #b56a06;
-  --borde: #e6dbc7;
+  /* Chrome de la app: identidad institucional, fija. Papel frío, tinta petróleo
+     y ocre solo para lo que falta cobrar. */
+  --fondo: #f5f4f0;
+  --tarjeta: #ffffff;
+  --banda: #ecebe5;
+  --tinta: #1c2624;
+  --tinta-suave: #5a6663;
+  --tinta-boton: #f6f5f1;
+  --borde: #d9d6cd;
+  --borde-fuerte: #b6b2a6;
+  --acento: #1b4b52;
+  --acento-oscuro: #123338;
+  --acento-suave: #e3eded;
+  --ocre: #a8702a;
+  /* El ocre de relleno no llega a 4.5:1 en texto chico: para leer va más oscuro. */
+  --ocre-texto: #8a5a1e;
+  --ocre-suave: #f4e9d8;
+  --peligro: #8e2f24;
+  --radio: 4px;
+  --radio-lg: 6px;
+  --sombra: 0 1px 2px rgb(28 38 36 / 0.06);
+  --ui-serif: 'Source Serif 4', Georgia, serif;
+  --ui-sans: 'IBM Plex Sans', system-ui, sans-serif;
 
-  --vino: #63302f;
-  --vino-oscuro: #4a2123;
-  --rosa: #f2a2a2;
-  --rosa-claro: #f7bdbd;
-  --crema: #fbefea;
-  --serif: 'Playfair Display', Georgia, serif;
-  --sans: 'Montserrat', system-ui, sans-serif;
+  /* Boleta: valores hasta que useTema vuelque la paleta y la tipografía
+     guardadas. Son las únicas que cambia el organizador; el chrome no se mueve. */
+  --vino: #14383d;
+  --vino-oscuro: #0c2529;
+  --rosa: #d0a24c;
+  --rosa-claro: #e6c88b;
+  --crema: #f4f1ea;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
 }
 
 * {
@@ -26,14 +42,30 @@ body {
   margin: 0;
   background: var(--fondo);
   color: var(--tinta);
-  font-family: var(--sans);
+  font-family: var(--ui-sans);
+  font-size: 0.95rem;
+  line-height: 1.5;
   -webkit-text-size-adjust: 100%;
 }
 
+/* Las cifras se leen en columna en caja, ventas y resumen: nunca bailan. */
+table,
+dd,
+.ventas__num,
+.ventas__falta {
+  font-variant-numeric: tabular-nums;
+}
+
 .app {
+  /* Un solo valor para el margen de la página: el póster lo usa en negativo
+     para salirse a sangre en móvil. */
+  --pad: clamp(0.5rem, 3vw, 1.5rem);
   display: grid;
   gap: 1.25rem;
-  padding: clamp(0.5rem, 3vw, 1.5rem);
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: var(--pad);
   justify-items: center;
 }
 
@@ -48,22 +80,51 @@ body {
   justify-self: stretch;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--sombra);
+}
+
+.app__marca {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-right: auto;
+  font-family: var(--ui-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* El nombre de la rifa abierta, para saber sobre qué se está trabajando. */
+.app__marca small {
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--borde);
+  font-family: var(--ui-sans);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
 }
 
 .app__salir {
-  margin-left: auto;
+  color: var(--tinta-suave);
 }
 
 .app__logo {
-  width: 2.1rem;
-  height: 2.1rem;
-  align-self: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: var(--radio);
 }
 
 .app__cargando {
   margin: 3rem 0;
-  opacity: 0.7;
+  color: var(--tinta-suave);
 }
 
 .acceso {
@@ -75,6 +136,12 @@ body {
 
 .app--onb {
   padding: 0;
+}
+
+/* Banda de papel a ancho completo: la portada es la primera prueba de que
+   esto es una herramienta de trabajo y no una tarjeta de fiesta. */
+.app--onb {
+  background: var(--fondo);
 }
 
 .onb {
@@ -97,7 +164,6 @@ body {
      primero y el argumento de venta queda debajo. */
   .onb__form {
     order: -1;
-    position: static;
   }
 }
 
@@ -119,7 +185,7 @@ body {
 
 .onb__titulo {
   margin: 0;
-  font-family: var(--serif);
+  font-family: var(--ui-serif);
   font-size: clamp(2.4rem, 7vw, 4rem);
   line-height: 1.02;
 }
@@ -147,7 +213,7 @@ body {
 }
 
 .onb__precio-cifra {
-  font-family: var(--serif);
+  font-family: var(--ui-serif);
   font-size: clamp(2.6rem, 8vw, 3.6rem);
   font-weight: 700;
   color: var(--acento-oscuro);
@@ -202,8 +268,6 @@ body {
 
 .onb__form {
   align-self: start;
-  position: sticky;
-  top: 2rem;
 }
 
 .onb__cta {
@@ -243,7 +307,7 @@ body {
 
 .espera__precio {
   margin: 0.5rem 0 0;
-  font-family: var(--serif);
+  font-family: var(--ui-serif);
   font-size: 1.05rem;
   color: var(--acento-oscuro);
 }
@@ -260,7 +324,7 @@ body {
   border-radius: 999px;
   background: var(--acento);
   color: var(--tinta-boton);
-  font-family: var(--sans);
+  font-family: var(--ui-sans);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -361,10 +425,11 @@ body {
   opacity: 0.7;
 }
 
-.misrifas__item--activa {
+.misrifas__item--activa,
+.misrifas__item--activa:hover {
   background: var(--acento);
   color: var(--tinta-boton);
-  border-color: var(--acento-oscuro);
+  border-color: var(--acento);
 }
 
 .misrifas__nueva {
@@ -400,27 +465,18 @@ body {
   max-width: 620px;
 }
 
-/* Pegada abajo mientras se elige: en el celular el tablero ocupa toda la
-   pantalla y el botón de vender quedaba a un scroll de distancia. */
+/* En el flujo, debajo de la leyenda: flotando tapaba el tablero y se movía
+   con el scroll. Aquí siempre está en el mismo sitio. */
 .app__multiple {
-  position: sticky;
-  bottom: 0.75rem;
-  z-index: 5;
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   justify-content: center;
-  width: min(100%, 26rem);
-  padding: 0.4rem;
-  border-radius: 999px;
-  /* Opaca: pegada abajo pasa por encima de la leyenda y en semitransparente
-     se leían los dos textos encimados. */
-  background: var(--fondo);
-  box-shadow: 0 8px 24px rgb(60 45 15 / 0.28);
+  width: min(100%, 720px);
 }
 
 .app__multiple > * {
-  flex: 1 1 12rem;
+  flex: 0 1 auto;
 }
 
 .app__descargar {
@@ -500,18 +556,55 @@ body {
   transform: rotate(-160deg);
 }
 
-/* El marco va alineado y dentro del póster, no sangrando como las ramas. */
-.florituras__pieza--marco-sd {
-  top: 2.5cqi;
-  right: 2.5cqi;
-  width: 44cqi;
+/* ---------- marco ----------
+   Los tramos rectos van en borde CSS y no en SVG: un rectángulo estirado a la
+   proporción del póster deformaría cualquier ornamento que llevara dentro.
+   Las cuatro esquinas son la misma pieza espejada. */
+
+.marco__filete {
+  position: absolute;
+  inset: 3cqi;
+  border: 0.45cqi solid currentColor;
+  border-radius: 0.8cqi;
 }
 
-.florituras__pieza--marco-ii {
-  bottom: 2.5cqi;
-  left: 2.5cqi;
-  width: 44cqi;
-  transform: rotate(180deg);
+/* Filete interior fino: el doble hilo es lo que hace que se lea como marco
+   y no como un recuadro. */
+.marco__filete::after {
+  content: '';
+  position: absolute;
+  inset: 1.4cqi;
+  border: 0.15cqi solid currentColor;
+  border-radius: 0.4cqi;
+}
+
+.marco__esquina {
+  position: absolute;
+  width: 22cqi;
+  height: auto;
+}
+
+.marco__esquina--si {
+  top: 2.2cqi;
+  left: 2.2cqi;
+}
+
+.marco__esquina--sd {
+  top: 2.2cqi;
+  right: 2.2cqi;
+  transform: scaleX(-1);
+}
+
+.marco__esquina--id {
+  right: 2.2cqi;
+  bottom: 2.2cqi;
+  transform: scale(-1);
+}
+
+.marco__esquina--ii {
+  bottom: 2.2cqi;
+  left: 2.2cqi;
+  transform: scaleY(-1);
 }
 
 /* ---------- cabecera ---------- */
@@ -550,8 +643,8 @@ body {
   text-transform: lowercase;
 }
 
-/* Doble clase: gana el tamaño propio sobre el de .icono-ui, que va más abajo. */
-.poster__corazon.icono-ui {
+/* El sello del título repite la marca elegida para los puestos vendidos. */
+.poster__sello {
   width: 12cqi;
   height: 12cqi;
   color: var(--rosa);
@@ -559,7 +652,7 @@ body {
   filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.25));
 }
 
-.poster__corazon--pie.icono-ui {
+.poster__sello--pie {
   width: 14cqi;
   height: 14cqi;
 }
@@ -640,7 +733,11 @@ body {
   background: var(--relleno);
   color: var(--vino);
   font-family: var(--sans);
-  font-size: max(9px, 2.7cqi);
+  /* El cuerpo se reparte entre las cifras que trae la etiqueta: con 100
+     números son dos y se ven grandes; con 1000 son tres y bajan solas para no
+     salirse de la casilla. Antes era 2.7cqi fijo y el número ocupaba menos de
+     la mitad del ancho de su casilla. */
+  font-size: max(9px, calc(7.8cqi / var(--cifras, 2)));
   line-height: 1;
   cursor: pointer;
   transition: transform 0.12s, background 0.12s;
@@ -719,8 +816,8 @@ body {
 }
 
 .celda--sello .celda__marca {
-  width: 2em;
-  height: 2em;
+  width: 1.4em;
+  height: 1.4em;
   transform: rotate(-15deg);
 }
 
@@ -744,15 +841,17 @@ body {
   box-shadow: none;
 }
 
+/* En em sobre el cuerpo de la casilla: al crecer el número la marca crecería
+   con él, y ya llenaba bien la casilla. Estos valores la dejan igual que antes. */
 .celda__marca {
-  width: 1.6em;
-  height: 1.6em;
+  width: 1.1em;
+  height: 1.1em;
   opacity: 0.85;
 }
 
 .celda__ganadora.icono-ui {
-  width: 1.5em;
-  height: 1.5em;
+  width: 1.05em;
+  height: 1.05em;
 }
 
 /* Íconos de interfaz: heredan color y tamaño de texto del botón que los lleva. */
@@ -787,7 +886,7 @@ body {
    contenedor de consultas, por eso el tamaño va en rem y no en cqi. */
 .leyenda .celda {
   width: 2.2rem;
-  font-size: 0.8rem;
+  font-size: 1.05rem;
   cursor: default;
 }
 
@@ -933,41 +1032,51 @@ body {
   width: 100%;
   display: grid;
   gap: 0.75rem;
-  padding: 1.25rem;
+  padding: 1.15rem 1.25rem 1.35rem;
   background: var(--tarjeta);
   border: 1px solid var(--borde);
-  border-radius: 14px;
-  box-shadow: 0 1px 2px rgb(90 70 30 / 0.05), 0 10px 24px rgb(90 70 30 / 0.06);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--sombra);
 }
 
 .panel__titulo {
   margin: 0;
-  font-family: var(--serif);
+  font-family: var(--ui-serif);
   font-size: 1.3rem;
 }
 
+/* Pestañas subrayadas, no pastillas: es una barra de secciones de trabajo. */
 .panel__nav {
   display: flex;
   flex-wrap: wrap; /* envuelven en dos filas; nada de scroll horizontal */
-  gap: 0.25rem;
+  gap: 0 1.1rem;
   border-bottom: 1px solid var(--borde);
-  padding-bottom: 0.5rem;
 }
 
+/* Sin `flex: 1`: con siete secciones la segunda fila repartía dos pestañas a lo
+   ancho y parecían otra barra. Cada una mide lo que dice. */
 .panel__tab {
-  flex: 1 1 auto;
-  padding: 0.45rem 0.6rem;
+  flex: 0 0 auto;
+  padding: 0.45rem 0;
   border: 0;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  opacity: 0.65;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--tinta-suave);
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
 }
 
-.panel__tab--activa {
-  background: var(--acento);
-  color: var(--tinta-boton);
+.panel__tab:hover {
+  background: transparent;
+  color: var(--tinta);
+}
+
+.panel__tab--activa,
+.panel__tab--activa:hover {
+  border-bottom-color: var(--acento);
+  color: var(--acento);
   font-weight: 600;
-  opacity: 1;
 }
 
 .panel__seccion {
@@ -981,71 +1090,6 @@ body {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   opacity: 0.95;
-}
-
-.panel__paletas,
-.panel__marcas,
-.panel__fondos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.panel__opcion {
-  flex: 1 1 auto;
-  padding: 0.35rem 0.7rem;
-  font-size: 0.75rem;
-  border-color: var(--borde);
-}
-
-.panel__opcion--activa {
-  background: var(--acento);
-  color: var(--tinta-boton);
-  border-color: var(--acento-oscuro);
-  font-weight: 600;
-}
-
-.marca {
-  width: 2.4rem;
-  height: 2.4rem;
-  padding: 0.4rem;
-  border-radius: 8px;
-  border-color: var(--borde);
-  color: var(--tinta);
-}
-
-.marca svg {
-  width: 100%;
-  height: 100%;
-}
-
-.marca--activa {
-  background: var(--acento);
-  color: var(--tinta-boton);
-  border-color: var(--acento-oscuro);
-}
-
-.paleta {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  width: 3rem;
-  height: 2.2rem;
-  padding: 4px;
-  border: 2px solid transparent;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.paleta span {
-  flex: 1;
-  height: 60%;
-  border-radius: 3px;
-}
-
-.paleta--activa {
-  border-color: var(--tinta);
-  box-shadow: 0 0 0 2px var(--acento);
 }
 
 .panel__fila {
@@ -1069,20 +1113,27 @@ body {
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
   margin: 0.25rem 0 0;
-  text-align: center;
+}
+
+.panel__resumen > div {
+  padding: 0.5rem 0.6rem;
+  background: var(--banda);
+  border-radius: var(--radio);
 }
 
 .panel__resumen dt {
-  font-size: 0.7rem;
-  opacity: 0.7;
+  font-size: 0.65rem;
+  color: var(--tinta-suave);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .panel__resumen dd {
-  margin: 0.15rem 0 0;
-  font-family: var(--serif);
-  font-size: 1.1rem;
+  margin: 0.2rem 0 0;
+  font-family: var(--ui-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .panel__caja {
@@ -1105,8 +1156,10 @@ body {
 
 .panel__caja-total th,
 .panel__caja-total td {
-  font-weight: 700;
-  color: var(--acento-oscuro);
+  font-weight: 600;
+  color: var(--acento);
+  border-bottom-width: 2px;
+  border-bottom-color: var(--borde-fuerte);
 }
 
 .panel__fila--fin {
@@ -1116,7 +1169,7 @@ body {
 .panel__nota {
   margin: 0;
   font-size: 0.85rem;
-  opacity: 0.85;
+  color: var(--tinta-suave);
 }
 
 .dialogo__pagos {
@@ -1134,10 +1187,11 @@ body {
 label {
   display: grid;
   gap: 0.3rem;
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.95;
+  color: var(--tinta-suave);
 }
 
 input,
@@ -1145,8 +1199,8 @@ select,
 textarea {
   width: 100%;
   padding: 0.5rem 0.6rem;
-  border: 1px solid var(--borde);
-  border-radius: 6px;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio);
   background: #ffffff;
   color: inherit;
   font: inherit;
@@ -1195,7 +1249,7 @@ input[type='checkbox'] {
   height: 1.05rem;
   flex: none;
   margin: 0;
-  accent-color: var(--acento-oscuro);
+  accent-color: var(--acento);
 }
 
 textarea {
@@ -1209,14 +1263,15 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid var(--acento);
+  outline-offset: 1px;
 }
 
 .panel__previo {
   margin: -0.35rem 0 0;
   padding: 0.6rem 0.75rem;
-  border-left: 2px solid var(--acento);
-  background: #f7f0e4;
-  border-radius: 0 6px 6px 0;
+  border-left: 2px solid var(--ocre);
+  background: var(--ocre-suave);
+  border-radius: 0 var(--radio) var(--radio) 0;
   font-size: 0.78rem;
   line-height: 1.45;
   white-space: pre-line;
@@ -1229,49 +1284,69 @@ option {
 
 button,
 .boton {
-  padding: 0.55rem 0.9rem;
-  border: 1px solid var(--acento);
-  border-radius: 999px;
-  background: transparent;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio);
+  background: var(--tarjeta);
   color: var(--tinta);
   font: inherit;
   font-size: 0.85rem;
+  font-weight: 500;
   cursor: pointer;
   text-decoration: none;
   text-align: center;
+  transition: background 0.12s, border-color 0.12s;
 }
 
 button:hover,
 .boton:hover {
-  background: #f5a6231f;
+  background: var(--acento-suave);
+  border-color: var(--acento);
+}
+
+button:focus-visible,
+.boton:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 1px;
 }
 
 .boton--primario {
   background: var(--acento);
+  border-color: var(--acento);
   color: var(--tinta-boton);
   font-weight: 600;
 }
 
+.boton--primario:hover {
+  background: var(--acento-oscuro);
+  border-color: var(--acento-oscuro);
+}
+
 .boton--peligro {
-  border-color: #d0554d;
-  color: #a1281f;
+  border-color: color-mix(in srgb, var(--peligro) 45%, var(--borde));
+  color: var(--peligro);
+}
+
+.boton--peligro:hover {
+  background: color-mix(in srgb, var(--peligro) 8%, var(--tarjeta));
+  border-color: var(--peligro);
 }
 
 /* ---------- diálogo ---------- */
 
 .dialogo {
-  width: min(92vw, 380px);
+  width: min(92vw, 400px);
   padding: 1.5rem;
   border: 1px solid var(--borde);
-  border-radius: 16px;
-  box-shadow: 0 18px 50px rgb(60 45 15 / 0.25);
+  border-radius: var(--radio-lg);
+  box-shadow: 0 12px 40px rgb(18 30 28 / 0.22);
   background: var(--tarjeta);
   color: var(--tinta);
   position: relative;
 }
 
 .dialogo::backdrop {
-  background: rgb(0 0 0 / 0.55);
+  background: rgb(20 30 29 / 0.55);
 }
 
 .dialogo--imagen {
@@ -1291,7 +1366,7 @@ button:hover,
 
 .dialogo__titulo {
   margin: 0 0 1rem;
-  font-family: var(--serif);
+  font-family: var(--ui-serif);
   font-size: 1.4rem;
 }
 
@@ -1310,14 +1385,18 @@ button:hover,
 
 .dialogo__dato {
   margin: 0;
-  font-family: var(--serif);
+  font-family: var(--ui-serif);
   font-size: 1.25rem;
   letter-spacing: 0.05em;
 }
 
 .dialogo__error {
   margin: 0;
-  color: #a1281f;
+  padding: 0.5rem 0.65rem;
+  border-left: 2px solid var(--peligro);
+  background: color-mix(in srgb, var(--peligro) 7%, var(--tarjeta));
+  border-radius: 0 var(--radio) var(--radio) 0;
+  color: var(--peligro);
   font-size: 0.85rem;
 }
 
@@ -1341,24 +1420,16 @@ button:hover,
   border-color: transparent;
 }
 
-/* En móvil el diálogo es una hoja pegada abajo: nace donde está el pulgar y
-   los botones dejan de ser dos blancos de 2rem uno al lado del otro. */
+/* En móvil el diálogo sigue siendo una tarjeta centrada; lo que cambia es que
+   los botones crecen hasta ser blancos de dedo. */
 @media (max-width: 560px) {
   .dialogo,
   .dialogo--imagen,
   .dialogo--confirmar {
-    /* 100% y no 100vw: 100vw cuenta la barra de scroll y saca scroll horizontal. */
-    width: 100%;
+    /* 92% y no 92vw: 100vw cuenta la barra de scroll y saca scroll horizontal. */
+    width: 92%;
     max-width: none;
-    /* fixed: el .dialogo base es relative y eso pisa el position del navegador
-       para un diálogo modal, así que la hoja se iba con el scroll. */
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    margin: 0;
-    padding: 1.25rem 1.1rem calc(1.1rem + env(safe-area-inset-bottom));
-    border-radius: 18px 18px 0 0;
-    border-bottom: 0;
+    padding: 1.25rem 1.1rem;
   }
 
   /* Invertido: la acción principal queda arriba, lejos del borde de la pantalla. */
@@ -1383,62 +1454,640 @@ button:hover,
   }
 }
 
-/* Lista de compradores: mismo código de color que el tablero (apartado punteado,
-   pagado sólido) para no aprender dos lenguajes distintos. */
+/* ---------- compradores ----------
+   Vive dentro del panel de configuración. Mismo código de color que el tablero:
+   ocre punteado = apartado, petróleo sólido = pagado. */
+
+.ventas__resumen {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--tinta-suave);
+}
+
+.ventas__resumen strong {
+  color: var(--ocre-texto);
+  font-weight: 600;
+}
+
 .ventas {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  /* Con cien números vendidos la lista no puede empujar el resto del panel. */
+  max-height: 22rem;
+  overflow-y: auto;
 }
 
 .ventas__fila {
   display: grid;
-  gap: 0.3rem;
-  padding: 0.5rem 0.6rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
+  padding: 0.55rem 0.65rem;
   border: 1px solid var(--borde);
-  border-radius: 0.6rem;
+  border-radius: var(--radio);
 }
 
 .ventas__quien {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
   align-items: baseline;
-  font-size: 0.9rem;
+  gap: 0.45rem;
+  font-size: 0.88rem;
 }
 
 .ventas__quien span {
-  opacity: 0.7;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  color: var(--tinta-suave);
+}
+
+.ventas__estado {
+  justify-self: end;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  color: var(--tinta-suave);
+}
+
+.ventas__estado--debe {
+  color: var(--ocre-texto);
+  font-weight: 600;
 }
 
 .ventas__nums {
+  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
 }
 
 .ventas__num {
-  min-width: 2.4rem;
-  padding: 0.25rem 0.4rem;
+  min-width: 2.5rem;
+  padding: 0.28rem 0.4rem;
   font-size: 0.8rem;
-  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
+/* Apartado: contorno ocre punteado, igual que la casilla del tablero. */
 .ventas__num--apartado {
   border-style: dashed;
-  border-width: 2px;
+  border-color: var(--ocre);
+  color: var(--ocre-texto);
+}
+
+.ventas__num--apartado:hover {
+  background: var(--ocre-suave);
+  border-color: var(--ocre);
 }
 
 .ventas__num--pagado {
   background: var(--acento);
+  border-color: var(--acento);
   color: var(--tinta-boton);
-  font-weight: 700;
 }
 
-.ventas__falta {
-  font-size: 0.8rem;
+.ventas__num--pagado:hover {
+  background: var(--acento-oscuro);
+  border-color: var(--acento-oscuro);
+}
+
+/* ---------- sugerencias de cliente ---------- */
+
+.sugerencias {
+  list-style: none;
+  margin: -0.35rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+  max-height: 11rem;
+  overflow-y: auto;
+}
+
+.sugerencias__op {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  font-weight: 400;
+}
+
+.sugerencias__op strong {
+  font-size: 0.88rem;
   font-weight: 600;
+}
+
+.sugerencias__op span {
+  font-size: 0.78rem;
+  color: var(--tinta-suave);
+}
+
+@media (pointer: coarse) {
+  .ventas__num {
+    min-width: 2.9rem;
+    min-height: 2.75rem;
+  }
+
+  .sugerencias__op {
+    min-height: 2.75rem;
+  }
+}
+
+.sugerencias__mas {
+  padding: 0.2rem 0.1rem;
+  font-size: 0.75rem;
+  color: var(--tinta-suave);
+}
+
+/* ==========================================================================
+   Zona de trabajo
+   La tarea del 90% es vender o cobrar un número. Lo que estorbaba: las cifras
+   de la rifa vivían dos toques adentro, el número se cazaba a ojo entre cien
+   casillas, y en móvil la configuración empujaba el tablero tres pantallas
+   abajo. Este bloque ordena eso; va al final para ganarle a las reglas de
+   arriba sin tener que subirles la especificidad.
+   ========================================================================== */
+
+/* La barra queda a la vista: es la única salida hacia Ajustes y la sesión. */
+.app__barra {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.app__ajustes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.app__ajustes--activo,
+.app__ajustes--activo:hover {
+  background: var(--acento);
+  border-color: var(--acento-oscuro);
+  color: var(--tinta-boton);
+  font-weight: 600;
+}
+
+.app__ajustes--activo:hover {
+  background: var(--acento-oscuro);
+}
+
+/* ---------- cabecera del tablero: en qué va y cómo llegar a un número ---------- */
+
+.tbar {
+  display: grid;
+  gap: 0.85rem;
+  width: min(100%, 720px);
+  padding: 0.9rem 1rem 1rem;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--sombra);
+}
+
+.tbar__cifras {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.tbar__cifras > div {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--banda);
+  border-radius: var(--radio);
+}
+
+.tbar__cifras dt {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+.tbar__cifras dd {
+  margin: 0;
+  font-family: var(--ui-serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+/* La cifra de dinero es la más larga: baja de cuerpo para no partirse. */
+.tbar__cobrar dd {
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+/* Ocre y no rojo: es plata por cobrar, no un error. */
+.tbar__debe {
+  color: var(--ocre-texto);
+}
+
+.tbar__ir-campo {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tbar__ir-campo input {
+  flex: 1;
+  min-width: 0;
+}
+
+.tbar__ir-campo button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding-inline: 1.1rem;
+}
+
+.tbar__ir .dialogo__error {
+  margin-top: 0.15rem;
+}
+
+/* ---------- acciones de la lámina ---------- */
+
+.app__descargar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+}
+
+/* Marcando números, la barra se despega y se fija abajo: sin esto cada lote
+   obliga a bajar hasta el pie a confirmar y volver a subir a seguir marcando. */
+.app__multiple--marcando {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  width: auto;
+  justify-content: center;
+  padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom));
+  background: var(--tarjeta);
+  border-top: 1px solid var(--borde-fuerte);
+  box-shadow: 0 -6px 20px rgb(28 38 36 / 0.12);
+}
+
+.app__multiple--marcando button {
+  min-height: 2.75rem;
+}
+
+/* Sin números marcados el botón no vende nada: lo dice en vez de fallar. */
+.app__multiple button:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+/* ---------- escritorio ---------- */
+
+@media (min-width: 901px) {
+  /* El panel sigue al scroll del tablero: el póster mide dos pantallas y antes
+     la configuración se quedaba arriba, fuera de alcance. */
+  .app--panel .app__columna {
+    position: sticky;
+    top: calc(3.6rem + var(--pad));
+    align-self: start;
+  }
+}
+
+/* ---------- móvil ---------- */
+
+@media (max-width: 900px) {
+  /* Ajustes es una vista, no un apéndice: con el panel abierto el tablero
+     estaba a tres pantallas de scroll y nadie lo encontraba. */
+  .app--panel .app__laminas {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Cuatro columnas dejaban la cifra de dinero en 58px. */
+  .tbar__cifras {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- blancos de dedo ---------- */
+
+@media (pointer: coarse) {
+  .app__barra button,
+  .panel__tab,
+  .misrifas__item,
+  .misrifas__nueva button,
+  .tbar__ir-campo button,
+  .galeria__mas {
+    min-height: 2.75rem;
+  }
+}
+
+/* ---------- movimiento ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .celda:hover,
+  .celda--elegida {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   Lámina de exportación
+   El PNG se arma sobre una copia fija de 720px, nunca sobre lo que se ve.
+   Con el tablero al 94% que usa el móvil la lámina mide 1.97 de alto por 1 de
+   ancho: más que 9:16, y el estado de WhatsApp la recortaba. A 720px la
+   proporción natural es 1.735 y el min-height la estira justo a 9:16.
+   ========================================================================== */
+
+.poster--export {
+  /* Sin relative las florituras (inset: 0) se posicionan contra la ventana. */
+  position: relative;
+  width: 720px;
+  max-width: none;
+  margin: 0;
+  padding: 5cqi 4cqi 6cqi;
+  box-shadow: none;
+  flex: none;
+}
+
+.poster--export .tablero {
+  width: 76%;
+}
+
+/* Marco de 9:16 exacto: es lo que se dibuja, con el poster dentro. */
+.marco-export {
+  width: 720px;
+  height: 1280px;
+  display: flex;
+  justify-content: center;
+  /* flex-start: estirado, el poster mediria 1280 y no se sabria si cabe. */
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+/* La copia se maqueta fuera de la vista mientras se dibuja el PNG. */
+.jaula-export {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 720px;
+  height: 1280px;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   Barra superior en móvil
+   Pegada arriba tenía que ser una barra de aplicación, no una tarjeta
+   flotando: los bordes redondeados dejaban ver el fondo pasando por los
+   costados y el alto de tarjeta se comía una franja de tablero en cada scroll.
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .app__barra {
+    width: calc(100% + var(--pad) * 2);
+    margin: calc(var(--pad) * -1) calc(var(--pad) * -1) 0;
+    padding: 0.35rem var(--pad);
+    border-width: 0 0 1px;
+    border-radius: 0;
+    box-shadow: none;
+    /* Traslúcida: el tablero se ve correr por debajo, así se entiende que la
+       barra está encima de la página y no que la página empieza ahí. */
+    background: color-mix(in srgb, var(--tarjeta) 86%, transparent);
+    backdrop-filter: blur(12px);
+    flex-wrap: nowrap;
+    gap: 0.6rem;
+  }
+
+  /* font-size: 0 tapa el texto suelto «Rifas», que no es texto de ningún
+     elemento y no se puede ocultar de otra forma. En el celular el título que
+     sirve mientras se hace scroll es el de la rifa abierta, no el de la app;
+     los hijos recuperan su tamaño abajo. */
+  .app__marca {
+    min-width: 0;
+    overflow: hidden;
+    gap: 0.5rem;
+    font-size: 0;
+  }
+
+  /* Deja de ser un pie de firma y pasa a ser el título de la barra. */
+  .app__marca small {
+    min-width: 0;
+    overflow: hidden;
+    padding-left: 0;
+    border-left: 0;
+    color: var(--tinta);
+    font-family: var(--ui-serif);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: nowrap;
+  }
+
+  .app__logo {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .app__ajustes {
+    flex: none;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  /* Cerrar sesión no es tarea de todos los días: baja al panel de ajustes. */
+  .app__salir {
+    display: none;
+  }
+
+  .app--panel .app__barra {
+    flex-wrap: wrap;
+  }
+
+  .app--panel .app__salir {
+    display: inline-flex;
+    order: 3;
+    flex: 1 0 100%;
+  }
+}
+
+/* ==========================================================================
+   Link público
+   Se comparte para mirar, no para operar: solo la lámina, sin barra ni panel.
+   El tablero queda al 76% como en el PNG que se descarga, así la página se ve
+   igual que la imagen que circula por WhatsApp y conserva su proporción en
+   cualquier pantalla.
+   ========================================================================== */
+
+.app--publico {
+  display: block;
+  max-width: 720px;
+  padding: 0;
+}
+
+.app--publico .tablero {
+  width: 76%;
+}
+
+.publico__vivo {
+  margin: 0;
+  padding: 0.9rem 1rem 1.5rem;
+  color: var(--tinta-suave);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* ==========================================================================
+   Galerías de fondo, paleta y marca
+   Se elige mirando, no leyendo: cada opción trae su dibujo de verdad, con los
+   colores de la paleta puesta. Antes los fondos eran botones de puro texto y
+   el nombre de la paleta solo vivía en `title`, que en táctil no existe.
+   ========================================================================== */
+
+.galeria {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.galeria__rejilla {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.galeria__rejilla--fondos {
+  grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+}
+
+.galeria__rejilla--paletas,
+.galeria__rejilla--marcas {
+  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+}
+
+.galeria__op {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.25rem 0.4rem;
+  border-color: var(--borde);
+  border-radius: var(--radio-lg);
+  font-size: 0.7rem;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.galeria__op:hover {
+  background: var(--acento-suave);
+  border-color: var(--acento);
+}
+
+/* Contorno grueso y nombre en negrita: entre doce miniaturas oscuras un borde
+   de 1px no alcanza para decir cuál está puesta. */
+.galeria__op--activa,
+.galeria__op--activa:hover {
+  border-color: var(--acento);
+  box-shadow: inset 0 0 0 2px var(--acento);
+  background: var(--acento-suave);
+}
+
+.galeria__op--activa .galeria__nombre {
+  color: var(--acento-oscuro);
+  font-weight: 600;
+}
+
+.galeria__nombre {
+  color: var(--tinta-suave);
+  overflow-wrap: anywhere;
+}
+
+.galeria__vista {
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+
+/* El «más» que pide el resto del catálogo. Enlace, no botón con caja: es
+   navegación dentro de la lista, no una opción más que se pueda elegir. */
+.galeria__mas {
+  justify-self: start;
+  padding: 0.3rem 0;
+  border: 0;
+  background: none;
+  color: var(--acento);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.galeria__mas:hover {
+  background: none;
+  color: var(--acento-oscuro);
+}
+
+/* ---------- las tres muestras ---------- */
+
+/* Vertical como el póster, y contenedor propio: las piezas de esquina miden
+   en cqi, así que sin `container-type` se dibujarían contra el ancho del
+   póster real y aquí saldrían gigantes. */
+.vista-fondo {
+  container-type: inline-size;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radio);
+  background: var(--vino);
+  color: var(--rosa);
+}
+
+.vista-paleta {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  padding: 4px;
+  border-radius: var(--radio);
+}
+
+.vista-paleta span {
+  flex: 1;
+  height: 60%;
+  border-radius: 3px;
+}
+
+/* Fuera del póster no hay contenedor de consultas: el cuerpo va en rem, igual
+   que en la leyenda, o la casilla saldría con otro grosor de marca. */
+.vista-marca.celda {
+  width: 2.5rem;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.vista-marca.celda:hover {
+  transform: none;
 }

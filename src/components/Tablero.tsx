@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { estiloPorId, Icono, IconoUI } from '../marcas';
 import { estadoNumero, etiqueta, numeros, type Estado } from '../rifa';
 
@@ -19,7 +20,14 @@ export function Tablero({ estado, onSeleccionar, elegidos = [] }: Props) {
   const estilo = estiloPorId(estado.config.estiloCelda);
 
   return (
-    <div className="tablero" role="grid" aria-label="Números de la rifa">
+    <div
+      className="tablero"
+      role="grid"
+      aria-label="Números de la rifa"
+      // Cuántas cifras trae la etiqueta más larga. El cuerpo del número se
+      // reparte entre ellas: con 100 números son dos y se ven grandes.
+      style={{ '--cifras': String(totalNumeros - 1).length } as CSSProperties}
+    >
       {numeros(totalNumeros).map((n) => {
         const situacion = estadoNumero(estado, n);
         const esGanador = n === numeroGanador;

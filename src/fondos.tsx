@@ -154,51 +154,79 @@ function ArcosDeco({ className }: Props) {
   );
 }
 
-/** Esquina de marco: doble filete, voluta y rombos. */
+/**
+ * Ornamento de esquina del marco, dibujado para la de arriba a la izquierda.
+ * Las otras tres son la misma pieza espejada por CSS: un marco tiene que
+ * cerrar igual por los cuatro lados o se lee como un paréntesis suelto.
+ *
+ * Los dos brazos son el mismo trazo reflejado en la diagonal (`matrix(0 1 1 0
+ * 0 0)`), así el ángulo sale simétrico sin dibujarlo dos veces.
+ */
 function MarcoEsquina({ className }: Props) {
   return (
-    <svg className={className} viewBox="0 0 220 220" fill="none" stroke="currentColor">
-      <g strokeWidth="2.4" strokeLinecap="round">
-        <path d="M214 6H44a12 12 0 00-12 12v170" />
+    <svg className={className} viewBox="0 0 130 130" fill="none" stroke="currentColor">
+      <defs>
+        <g id="marco-voluta" strokeWidth="2.2" strokeLinecap="round">
+          <path d="M34 15c19 0 35 5 45 15 6 7 5 16-3 19-7 2-13-2-13-8 0-5 4-9 9-9 7 0 12 6 12 14" />
+          <path strokeWidth="1.1" d="M36 22c13 1 25 5 33 12" />
+        </g>
+        <g id="marco-perlas" fill="currentColor" stroke="none">
+          <circle cx="98" cy="15" r="2.8" />
+          <circle cx="109" cy="15" r="2.1" />
+          <circle cx="118" cy="15" r="1.5" />
+        </g>
+        <g id="marco-hoja" strokeWidth="1.6" strokeLinecap="round">
+          <path d="M0 0C9-4 17-2 22 6 13 10 5 8 0 0Z" />
+          <path strokeWidth="1" d="M3 1c6-1 12 1 16 5" />
+        </g>
+      </defs>
+
+      {/* rosetón de la esquina: cuatro pétalos y perla al centro */}
+      <g strokeWidth="1.9">
+        <circle cx="17" cy="17" r="10" />
+        <path d="M17 8c4 5 4 8 0 9-4-1-4-4 0-9zM17 26c-4-5-4-8 0-9 4 1 4 4 0 9zM8 17c5-4 8-4 9 0-1 4-4 4-9 0zM26 17c-5 4-8 4-9 0 1-4 4-4 9 0z" />
       </g>
-      <g strokeWidth="1.3" strokeLinecap="round">
-        <path d="M214 16H52a8 8 0 00-8 8v164" />
+      <circle cx="17" cy="17" r="2.4" fill="currentColor" stroke="none" />
+
+      {/* los dos brazos, uno reflejado en la diagonal */}
+      <use href="#marco-voluta" />
+      <use href="#marco-voluta" transform="matrix(0 1 1 0 0 0)" />
+      <use href="#marco-perlas" />
+      <use href="#marco-perlas" transform="matrix(0 1 1 0 0 0)" />
+
+      {/* palmeta apuntando al centro del póster, sobre la diagonal */}
+      <g transform="translate(46 46) rotate(45)">
+        <g strokeWidth="1.9" strokeLinecap="round">
+          <path d="M0-16C8-16 12-7 0 5-12-7-8-16 0-16Z" />
+          <path strokeWidth="1.2" d="M0-12v14" />
+        </g>
+        <use href="#marco-hoja" transform="translate(-4 2) rotate(160)" />
+        <use href="#marco-hoja" transform="translate(4 2) rotate(20) scale(-1 1)" />
       </g>
-      {/* voluta de la esquina */}
-      <g strokeWidth="2" strokeLinecap="round">
-        <path d="M32 60c14 0 26-10 26-24 0-9-6-16-14-16s-14 6-14 14 6 13 13 13" />
-        <path d="M60 32c0-14 10-26 24-26 9 0 16 6 16 14s-6 14-14 14-13-6-13-13" />
-        <path d="M44 44c8 6 14 14 16 24M44 44c6-8 14-14 24-16" />
-      </g>
-      {/* rombos sobre el filete */}
-      <g strokeWidth="1.6">
-        {[110, 140, 170].map((x) => (
-          <path key={x} d={`M${x} 1.5l6 6-6 6-6-6 6-6z`} transform="translate(0 4)" />
-        ))}
-        {[110, 140, 170].map((y) => (
-          <path key={y} d={`M32 ${y}l6 6-6 6-6-6 6-6z`} transform="translate(-4 0)" />
-        ))}
-      </g>
+
+      {/* remates que enganchan la voluta con el filete */}
       <g fill="currentColor" stroke="none">
-        <circle cx="214" cy="6" r="4" />
-        <circle cx="32" cy="188" r="4" />
-        <circle cx="84" cy="6" r="2.4" />
-        <circle cx="32" cy="86" r="2.4" />
+        <circle cx="34" cy="15" r="2.4" />
+        <circle cx="15" cy="34" r="2.4" />
       </g>
     </svg>
   );
 }
 
 /**
- * El marco no puede usar la colocación de las ramas: esas sangran fuera del
- * borde y llevan una pieza rotada en diagonal. Un marco necesita dos esquinas
- * opuestas, alineadas y dentro del póster.
+ * Marco de verdad: los tramos rectos son bordes CSS, que no se deforman nunca,
+ * y las cuatro esquinas son la misma pieza espejada. Antes eran dos ornamentos
+ * en esquinas opuestas y sin borde entre ellos: no cerraba, y por eso se leía
+ * como un adorno suelto en vez de un marco.
  */
 function Marco() {
   return (
     <>
-      <MarcoEsquina className="florituras__pieza florituras__pieza--marco-sd" />
-      <MarcoEsquina className="florituras__pieza florituras__pieza--marco-ii" />
+      <span className="marco__filete" />
+      <MarcoEsquina className="marco__esquina marco__esquina--si" />
+      <MarcoEsquina className="marco__esquina marco__esquina--sd" />
+      <MarcoEsquina className="marco__esquina marco__esquina--id" />
+      <MarcoEsquina className="marco__esquina marco__esquina--ii" />
     </>
   );
 }
@@ -206,7 +234,18 @@ function Marco() {
 /* ---------- patrones que cubren todo el póster ---------- */
 
 /** slice + viewBox fijo: el motivo escala parejo y no se deforma con el póster. */
-function Patron({ id, tile, children }: { id: string; tile: number; children: JSX.Element }) {
+function Patron({
+  id,
+  tile,
+  alto = tile,
+  children,
+}: {
+  id: string;
+  tile: number;
+  /** Alto de la baldosa. Por defecto cuadrada; las escamas la quieren baja. */
+  alto?: number;
+  children: JSX.Element;
+}) {
   return (
     <svg
       className="florituras__patron"
@@ -216,7 +255,7 @@ function Patron({ id, tile, children }: { id: string; tile: number; children: JS
       stroke="currentColor"
     >
       <defs>
-        <pattern id={id} width={tile} height={tile} patternUnits="userSpaceOnUse">
+        <pattern id={id} width={tile} height={alto} patternUnits="userSpaceOnUse">
           {children}
         </pattern>
       </defs>
@@ -388,6 +427,169 @@ const Rombos = () => (
   </Patron>
 );
 
+/** Estrellas de cinco puntas en tres tamaños, con anillos y polvo. */
+const Estrellas = () => {
+  // Radio 10 por fuera y 4 por dentro: la de cinco puntas necesita las dos
+  // vueltas o queda un pentágono.
+  const estrella = (x: number, y: number, s: number, g = 0) => (
+    <path
+      key={`${x}-${y}`}
+      d="M0-10 2.35-3.24 9.51-3.09 3.8 1.24 5.88 8.09 0 4-5.88 8.09-3.8 1.24-9.51-3.09-2.35-3.24Z"
+      fill="currentColor"
+      stroke="none"
+      transform={`translate(${x} ${y}) rotate(${g}) scale(${s})`}
+    />
+  );
+  return (
+    <Patron id="p-estrellas" tile={120}>
+      <g>
+        {estrella(28, 30, 1.5)}
+        {estrella(92, 74, 1.05, 14)}
+        {estrella(104, 20, 0.7, -12)}
+        {estrella(56, 104, 0.85, 8)}
+        {estrella(12, 88, 0.55)}
+        <g strokeWidth="1.5">
+          <circle cx="70" cy="46" r="4" />
+          <circle cx="20" cy="116" r="3" />
+        </g>
+        {[
+          [54, 62, 2.2],
+          [116, 100, 2],
+          [86, 128, 1.8],
+        ].map(([x, y, r]) => punto(x, y, r))}
+      </g>
+    </Patron>
+  );
+};
+
+/**
+ * Escamas: arcos concéntricos encajados, como olas de estampa japonesa.
+ *
+ * La clave es que el radio (30) sea igual al alto de la baldosa y al paso
+ * horizontal entre centros: así cada arco toca el borde de arriba justo donde
+ * arranca la fila siguiente y se solapa medio motivo con su vecino. Con el
+ * paso más ancho no encajan y se leen como filas de arcos sueltos.
+ */
+const Escamas = () => {
+  const R = 30;
+  const abanico = (cx: number) => (
+    <g key={cx}>
+      {[R, 22, 14, 6].map((r, i) => (
+        <path key={r} strokeWidth={i % 2 ? 1 : 1.8} d={`M${cx - r} ${R}A${r} ${r} 0 0 1 ${cx + r} ${R}`} />
+      ))}
+    </g>
+  );
+  return (
+    <Patron id="p-escamas" tile={60} alto={30}>
+      {/* de -30 a 90: los de los extremos completan lo que la baldosa vecina
+          corta a la mitad */}
+      <g strokeLinecap="round">{[-30, 0, 30, 60, 90].map(abanico)}</g>
+    </Patron>
+  );
+};
+
+/** Guirnalda de banderines colgando de un cordón festoneado. */
+const Banderines = () => {
+  const fila = (y: number, desfase: number) => (
+    <g key={y}>
+      <path
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        d={`M${desfase - 120} ${y}q10 9 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0`}
+      />
+      {[10, 30, 50, 70, 90, 110].map((x) => (
+        <path
+          key={x}
+          strokeWidth="2"
+          strokeLinejoin="round"
+          d={`M${x + desfase - 6} ${y + 4}h12l-6 15z`}
+        />
+      ))}
+    </g>
+  );
+  return (
+    <Patron id="p-banderines" tile={120}>
+      <g>
+        {fila(18, 0)}
+        {fila(78, 60)}
+      </g>
+    </Patron>
+  );
+};
+
+/** Retícula fina con cruces en los nudos. La más sobria de todas. */
+const Malla = () => (
+  <Patron id="p-malla" tile={60}>
+    <g>
+      <g strokeWidth="0.8">
+        <path d="M0 0h60M0 60h60M0 0v60M60 0v60" />
+      </g>
+      <g strokeWidth="1.6" strokeLinecap="round">
+        <path d="M30 24v12M24 30h12" />
+        <path d="M0 24v12M-6 30h12" />
+        <path d="M60 24v12M54 30h12" />
+      </g>
+      {[
+        [15, 15, 1.6],
+        [45, 45, 1.6],
+        [45, 15, 1.2],
+        [15, 45, 1.2],
+      ].map(([x, y, r]) => punto(x, y, r))}
+    </g>
+  </Patron>
+);
+
+/** Laurel: rama de hojas apareadas con bayas, cerrando la esquina. */
+function Laurel({ className }: Props) {
+  const nudos = Array.from({ length: 12 }, (_, i) => i);
+  return (
+    <svg className={className} viewBox="0 0 220 300" fill="none" stroke="currentColor">
+      <defs>
+        <g id="hoja-laurel" strokeWidth="2.2" strokeLinecap="round">
+          <path d="M0 0C14-19 42-20 60 0 42 20 14 19 0 0Z" />
+          <path strokeWidth="1.3" d="M5 0C22 3 42 3 56 0" />
+        </g>
+      </defs>
+      {/* tallo principal, de la esquina de arriba hacia abajo */}
+      <path strokeWidth="3" strokeLinecap="round" d="M210 8C172 50 144 106 130 166c-10 44-14 88-14 126" />
+      <g>
+        {nudos.map((i) => {
+          const t = i / (nudos.length - 1);
+          const x = 206 - t * 92;
+          const y = 16 + t * 262;
+          // Se van achicando hacia abajo: da la sensación de rama que nace en
+          // la esquina en vez de una hilera de hojas iguales.
+          const e = 1.05 - t * 0.3;
+          return (
+            <g key={i}>
+              <use href="#hoja-laurel" transform={`translate(${x} ${y}) rotate(${152 - t * 26}) scale(${e})`} />
+              <use href="#hoja-laurel" transform={`translate(${x} ${y}) rotate(${-38 - t * 22}) scale(${e * 0.92})`} />
+            </g>
+          );
+        })}
+      </g>
+      {/* bayas: tres por nudo, salteadas, para que la rama no quede plana */}
+      <g fill="currentColor" stroke="none">
+        {nudos
+          .filter((i) => i % 3 === 1)
+          .map((i) => {
+            const t = i / (nudos.length - 1);
+            const x = 206 - t * 92;
+            const y = 16 + t * 262;
+            return (
+              <g key={i}>
+                <circle cx={x - 9} cy={y + 12} r="3.4" />
+                <circle cx={x - 2} cy={y + 18} r="2.8" />
+                <circle cx={x + 6} cy={y + 13} r="2.2" />
+              </g>
+            );
+          })}
+        <circle cx="210" cy="8" r="3.6" />
+      </g>
+    </svg>
+  );
+}
+
 /* ---------- catálogo ---------- */
 
 export type Fondo = { id: string; nombre: string; Render: () => JSX.Element };
@@ -403,6 +605,11 @@ export const FONDOS: Fondo[] = [
   { id: 'ondas', nombre: 'Ondas', Render: Ondas },
   { id: 'corazones', nombre: 'Corazones', Render: Corazones },
   { id: 'rombos', nombre: 'Rombos', Render: Rombos },
+  { id: 'estrellas', nombre: 'Estrellas', Render: Estrellas },
+  { id: 'escamas', nombre: 'Escamas', Render: Escamas },
+  { id: 'banderines', nombre: 'Banderines', Render: Banderines },
+  { id: 'malla', nombre: 'Malla', Render: Malla },
+  { id: 'laurel', nombre: 'Laurel', Render: () => <Esquinas Pieza={Laurel} /> },
   { id: 'ninguno', nombre: 'Sin fondo', Render: () => <></> },
 ];
 

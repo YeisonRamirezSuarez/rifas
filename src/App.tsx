@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { DashboardSuper } from './components/DashboardSuper';
 import { DialogoImagen } from './components/DialogoImagen';
 import { EnEspera } from './components/EnEspera';
@@ -12,10 +12,83 @@ import { PanelSuperadmin } from './components/PanelSuperadmin';
 import { Poster } from './components/Poster';
 import { generarPng, type Imagen } from './exportar';
 import { enviarCorreo } from './correos';
+import { IconoUI } from './marcas';
+import { dentroDelRango, etiqueta, formatearPrecio, reporte, type Estado } from './rifa';
 import { useConfirmar } from './useConfirmar';
 import { usePerfil } from './usePerfil';
 import { useRifa } from './useRifa';
 import { useTema } from './useTema';
+
+/**
+ * Cabecera de trabajo: en qué va la rifa y cómo llegar a un número.
+ * Antes las cifras vivían dos toques adentro (Ajustes › Caja) y el número se
+ * cazaba a ojo entre cien casillas.
+ */
+function BarraTablero({ estado, abrir }: { estado: Estado; abrir: (n: number) => void }) {
+  const [texto, setTexto] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const r = reporte(estado);
+  const total = estado.config.totalNumeros;
+
+  const buscar = (ev: FormEvent) => {
+    ev.preventDefault();
+    const n = Number(texto.trim());
+    if (texto.trim() === '' || !dentroDelRango(n, total)) {
+      setError(`Escribe un número entre ${etiqueta(0, total)} y ${etiqueta(total - 1, total)}.`);
+      return;
+    }
+    setError(null);
+    setTexto('');
+    abrir(n);
+  };
+
+  return (
+    <section className="tbar" aria-label="Estado de la rifa">
+      <dl className="tbar__cifras">
+        <div>
+          <dt>Libres</dt>
+          <dd>{r.disponibles}</dd>
+        </div>
+        <div>
+          <dt>Apartados</dt>
+          <dd className={r.pendientes ? 'tbar__debe' : undefined}>{r.pendientes}</dd>
+        </div>
+        <div>
+          <dt>Pagados</dt>
+          <dd>{r.efectivo + r.transferencia}</dd>
+        </div>
+        <div className="tbar__cobrar">
+          <dt>Por cobrar</dt>
+          <dd className={r.porCobrar ? 'tbar__debe' : undefined}>
+            {formatearPrecio(r.porCobrar, estado.config.moneda)}
+          </dd>
+        </div>
+      </dl>
+
+      <form className="tbar__ir" onSubmit={buscar}>
+        <label htmlFor="ir-numero">Ir al número</label>
+        <div className="tbar__ir-campo">
+          <input
+            id="ir-numero"
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder={etiqueta(total - 1, total)}
+            value={texto}
+            onChange={(e) => {
+              setTexto(e.target.value);
+              setError(null);
+            }}
+          />
+          <button type="submit" className="boton--primario">
+            <IconoUI id="buscar" />
+            <span>Abrir</span>
+          </button>
+        </div>
+        {error && <p className="dialogo__error">{error}</p>}
+      </form>
+    </section>
+  );
+}
 
 export default function App() {
   const rifa = useRifa();
@@ -92,6 +165,42 @@ export default function App() {
     );
   }
 
+  // Link público: quien lo abre viene a mirar la lámina, no a operar la rifa.
+  // Se ve como el PNG que se comparte —el tablero no se ensancha, así conserva
+  // su proporción a cualquier ancho— y se repinta sola con cada venta, porque
+  // el canal de realtime ya está suscrito a esta rifa aunque no haya sesión.
+  if (!rifa.haySesion) {
+    return (
+      <main className="app app--publico">
+        {rifa.cargando ? (
+          <p className="app__cargando">Cargando rifa…</p>
+        ) : (
+          <>
+            {cerrado ? (
+              <Ganador estado={rifa.estado} verNombre={false} />
+            ) : (
+              <Poster estado={rifa.estado} onSeleccionar={(n) => setVenta([n])} />
+            )}
+            <p className="publico__vivo">
+              Esta página se actualiza sola: los números se marcan apenas se venden.
+            </p>
+          </>
+        )}
+
+        <DialogoNumero
+          estado={rifa.estado}
+          numeros={venta}
+          puedeEditar={false}
+          vender={rifa.vender}
+          marcarPago={rifa.marcarPago}
+          liberar={rifa.liberar}
+          confirmar={confirmar}
+          onCerrar={() => setVenta([])}
+        />
+      </main>
+    );
+  }
+
   // Cuenta creada pero todavía sin aprobar por un superadmin.
   if (rifa.haySesion && rifa.hayNube && !cuenta.cargando && !cuenta.aprobado) {
     return (
@@ -104,10 +213,20 @@ export default function App() {
   return (
     <main className={`app${mostrarPanel ? ' app--panel' : ''}`}>
       {rifa.haySesion && cuenta.aprobado && (
-        <div className="app__barra">
-          <img src="/logo.svg" alt="Rifas" className="app__logo" />
-          <button type="button" onClick={() => setPanelAbierto((v) => !v)}>
-            {panelAbierto ? 'Ocultar configuración' : 'Configurar rifa'}
+        <header className="app__barra">
+          <span className="app__marca">
+            <img src="/logo.svg" alt="" className="app__logo" />
+            Rifas
+            {rifa.rifaActual && <small>{rifa.estado.config.titulo}</small>}
+          </span>
+          <button
+            type="button"
+            className={`app__ajustes${panelAbierto ? ' app__ajustes--activo' : ''}`}
+            aria-pressed={panelAbierto}
+            onClick={() => setPanelAbierto((v) => !v)}
+          >
+            <IconoUI id={panelAbierto ? 'cerrar' : 'ajustes'} />
+            <span>{panelAbierto ? 'Ocultar ajustes' : 'Ajustes'}</span>
           </button>
           {/* Aquí y no dentro del panel: con la configuración oculta no quedaba
               ninguna forma de cerrar sesión. */}
@@ -116,7 +235,7 @@ export default function App() {
               Cerrar sesión
             </button>
           )}
-        </div>
+        </header>
       )}
 
       {mostrarPanel && (
@@ -187,14 +306,18 @@ export default function App() {
                   onClick={() => exportar('ganador', ganadorRef.current, 'rifa-ganador')}
                   disabled={exportando === 'ganador'}
                 >
-                  {exportando === 'ganador'
-                    ? 'Generando…'
-                    : 'Descargar imagen del ganador (estado de WhatsApp)'}
+                  <IconoUI id="descargar" />
+                  <span>
+                    {exportando === 'ganador'
+                      ? 'Generando…'
+                      : 'Descargar imagen del ganador (estado de WhatsApp)'}
+                  </span>
                 </button>
               )}
             </div>
           ) : (
             <div className="app__poster">
+              {rifa.puedeEditar && <BarraTablero estado={rifa.estado} abrir={(n) => setVenta([n])} />}
               <Poster
                 ref={posterRef}
                 estado={rifa.estado}
@@ -203,14 +326,17 @@ export default function App() {
               />
               <Leyenda config={rifa.estado.config} />
               {rifa.puedeEditar && (
-                <div className="app__multiple">
+                // Mientras se marcan números la barra se pega abajo: si no, cada
+                // lote obliga a bajar a confirmar y volver a subir a seguir marcando.
+                <div className={`app__multiple${elegidos ? ' app__multiple--marcando' : ''}`}>
                   <button type="button" onClick={() => setElegidos((e) => (e ? null : []))}>
                     {elegidos ? 'Salir de selección múltiple' : 'Vender varios a la misma persona'}
                   </button>
-                  {elegidos && elegidos.length > 0 && (
+                  {elegidos && (
                     <button
                       type="button"
                       className="boton--primario"
+                      disabled={elegidos.length === 0}
                       // Se limpia al abrir: los números ya viven en el diálogo, que los
                       // muestra en el título, y así abrir la ficha de un número vendido
                       // no se lleva por delante lo que se estaba marcando.
@@ -219,7 +345,9 @@ export default function App() {
                         setElegidos([]);
                       }}
                     >
-                      Vender {elegidos.length} {elegidos.length === 1 ? 'número' : 'números'}
+                      {elegidos.length === 0
+                        ? 'Toca los números en el tablero'
+                        : `Vender ${elegidos.length} ${elegidos.length === 1 ? 'número' : 'números'}`}
                     </button>
                   )}
                 </div>
@@ -232,9 +360,12 @@ export default function App() {
                   onClick={() => exportar('poster', posterRef.current, 'rifa')}
                   disabled={exportando === 'poster'}
                 >
-                  {exportando === 'poster'
-                    ? 'Generando…'
-                    : 'Descargar póster (estado de WhatsApp)'}
+                  <IconoUI id="descargar" />
+                  <span>
+                    {exportando === 'poster'
+                      ? 'Generando…'
+                      : 'Descargar póster (estado de WhatsApp)'}
+                  </span>
                 </button>
               )}
             </div>

@@ -32,32 +32,38 @@
   </style>
 
   <defs>
-    <clipPath id="dentro"><circle cx="32" cy="30" r="19" /></clipPath>
+    <clipPath id="dentro"><circle cx="32" cy="30" r="16.5" /></clipPath>
   </defs>
 
-  <!-- pata y boquilla: la tómbola se apoya y suelta la bola por abajo -->
-  <path d="M26 50h12l-6 8z" fill="#4a4a2e" />
-  <rect x="28.5" y="47" width="7" height="4" rx="1.4" fill="#4a4a2e" />
+  <!-- soporte y boquilla: dos patas, travesaño y la salida por abajo. Con la
+       base apoyada el dibujo deja de flotar cuando se ve a 16px en la pestaña. -->
+  <g stroke="#14383d" stroke-width="3.4" stroke-linecap="round">
+    <path d="M28 48l-5.5 8.5" />
+    <path d="M36 48l5.5 8.5" />
+  </g>
+  <rect x="19" y="56.5" width="26" height="3.6" rx="1.8" fill="#14383d" />
+  <rect x="28.5" y="46" width="7" height="4.5" rx="1.4" fill="#14383d" />
 
   <g class="tomb">
-    <circle cx="32" cy="30" r="19" fill="#fff6e4" />
+    <circle cx="32" cy="30" r="19" fill="#f4f1ea" />
 
     <g clip-path="url(#dentro)">
-      <circle class="bola b1" cx="24" cy="25" r="7" fill="#f5a623" />
-      <circle class="bola b2" cx="39" cy="27" r="6" fill="#ffc65a" />
-      <circle class="bola b3" cx="31" cy="38" r="6.5" fill="#e8890b" />
+      <circle class="bola b1" cx="24" cy="25" r="7" fill="#d0a24c" />
+      <circle class="bola b2" cx="39" cy="27" r="6" fill="#e6c88b" />
+      <circle class="bola b3" cx="31" cy="38" r="6.5" fill="#a8702a" />
     </g>
 
     <!-- dos flejes, no tres: a 16px el tercero convertía la tómbola en un rayado -->
-    <g fill="none" stroke="#4a4a2e" stroke-width="3" stroke-linecap="round">
+    <g fill="none" stroke="#14383d" stroke-width="3" stroke-linecap="round">
       <path d="M14 25c11 4.5 25 4.5 36 0" />
       <path d="M15 37c10.5 4 21.5 4 32 0" />
     </g>
-    <circle cx="32" cy="30" r="19" fill="none" stroke="#4a4a2e" stroke-width="4" />
+    <circle cx="32" cy="30" r="19" fill="none" stroke="#14383d" stroke-width="4" />
 
-    <!-- manija -->
-    <path d="M51 27c3.5-1 3.5 3 0 3s-3.5 4 0 3" fill="none" stroke="#4a4a2e" stroke-width="3" stroke-linecap="round" />
+    <!-- manivela: eje corto y perilla -->
+    <path d="M50 30h5" fill="none" stroke="#14383d" stroke-width="3" stroke-linecap="round" />
+    <circle cx="57.5" cy="30" r="2.8" fill="#14383d" />
   </g>
 
-  <circle class="premio" cx="32" cy="55" r="4.6" fill="#f5a623" stroke="#4a4a2e" stroke-width="2" />
+  <circle class="premio" cx="32" cy="55" r="4.6" fill="#d0a24c" stroke="#14383d" stroke-width="2" />
 </svg>

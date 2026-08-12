@@ -12,6 +12,24 @@ export type Paleta = {
 
 export const PALETAS: Paleta[] = [
   {
+    id: 'institucional',
+    nombre: 'Petróleo y ocre',
+    fondo: '#14383D',
+    fondoOscuro: '#0C2529',
+    acento: '#D0A24C',
+    acentoClaro: '#E6C88B',
+    claro: '#F4F1EA',
+  },
+  {
+    id: 'grafito',
+    nombre: 'Grafito',
+    fondo: '#23272C',
+    fondoOscuro: '#15181C',
+    acento: '#AEBAC3',
+    acentoClaro: '#D2DAE0',
+    claro: '#F1F3F5',
+  },
+  {
     id: 'rosa',
     nombre: 'Rosa vino',
     fondo: '#63302f',
@@ -65,6 +83,60 @@ export const PALETAS: Paleta[] = [
     acentoClaro: '#f8cfb4',
     claro: '#fdf1e8',
   },
+  {
+    id: 'menta',
+    nombre: 'Menta',
+    fondo: '#14403c',
+    fondoOscuro: '#0b2a27',
+    acento: '#6fd1b4',
+    acentoClaro: '#a6e6d3',
+    claro: '#eff8f4',
+  },
+  {
+    id: 'cafe',
+    nombre: 'Café con leche',
+    fondo: '#3b2a21',
+    fondoOscuro: '#261a14',
+    acento: '#d8a97a',
+    acentoClaro: '#edc9a3',
+    claro: '#f8f0e7',
+  },
+  {
+    id: 'indigo',
+    nombre: 'Índigo',
+    fondo: '#2a2a5e',
+    fondoOscuro: '#1b1b40',
+    acento: '#a9a6f0',
+    acentoClaro: '#cbc9f7',
+    claro: '#f1f0fd',
+  },
+  {
+    id: 'cereza',
+    nombre: 'Cereza',
+    fondo: '#5c1220',
+    fondoOscuro: '#3e0b16',
+    acento: '#f09aa8',
+    acentoClaro: '#f7c0c8',
+    claro: '#fdeff1',
+  },
+  {
+    id: 'oceano',
+    nombre: 'Océano',
+    fondo: '#0f3a4d',
+    fondoOscuro: '#082733',
+    acento: '#6ec6de',
+    acentoClaro: '#a7deec',
+    claro: '#edf7fa',
+  },
+  {
+    id: 'arena',
+    nombre: 'Arena y oliva',
+    fondo: '#4a4526',
+    fondoOscuro: '#322e19',
+    acento: '#d6ce7e',
+    acentoClaro: '#e8e3ae',
+    claro: '#f8f6e9',
+  },
 ];
 
 export type Tipografia = {
@@ -77,6 +149,13 @@ export type Tipografia = {
 };
 
 export const TIPOGRAFIAS: Tipografia[] = [
+  {
+    id: 'institucional',
+    nombre: 'Institucional',
+    titulos: "'Source Serif 4', Georgia, serif",
+    texto: "'IBM Plex Sans', system-ui, sans-serif",
+    google: 'family=Source+Serif+4:ital,wght@0,600;0,700;1,600&family=IBM+Plex+Sans:wght@400;500;600',
+  },
   {
     id: 'clasica',
     nombre: 'Clásica',

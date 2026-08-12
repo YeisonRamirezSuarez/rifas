@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { Florituras } from '../fondos';
-import { IconoUI } from '../marcas';
+import { Icono } from '../marcas';
 import { etiqueta, formatearFecha, formatearPrecio, type Estado } from '../rifa';
 import { Tablero } from './Tablero';
 
@@ -27,7 +27,7 @@ export const Poster = forwardRef<HTMLElement, Props>(function Poster(
       <header className="poster__cabecera">
         <h1 className="poster__titulo">
           <span className="poster__linea-1">
-            <IconoUI id="corazon" className="poster__corazon" />
+            <Icono id={c.marca} className="poster__sello" />
             <span className="poster__titulo-1" style={tamanoPrimera}>
               {primera}
             </span>
@@ -53,7 +53,7 @@ export const Poster = forwardRef<HTMLElement, Props>(function Poster(
             <p className="poster__valor-label">Valor:</p>
             <p className="poster__valor">
               <span>{formatearPrecio(c.precio, c.moneda)}</span>
-              <IconoUI id="corazon" className="poster__corazon poster__corazon--pie" />
+              <Icono id={c.marca} className="poster__sello poster__sello--pie" />
             </p>
           </>
         )}

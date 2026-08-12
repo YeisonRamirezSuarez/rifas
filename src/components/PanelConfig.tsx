@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ejemploMensaje,
   etiqueta,
@@ -10,8 +10,8 @@ import {
   type Config,
   type Estado,
 } from '../rifa';
-import { FONDOS } from '../fondos';
-import { ESTILOS_CELDA, Icono, MARCAS } from '../marcas';
+import { FONDOS, Florituras } from '../fondos';
+import { estiloPorId, ESTILOS_CELDA, Icono, MARCAS } from '../marcas';
 import { PALETAS, TIPOGRAFIAS } from '../temas';
 import { CampoNumero } from './CampoNumero';
 import { Leyenda } from './Leyenda';
@@ -23,7 +23,7 @@ type Props = {
   finalizar: (numeroGanador: number) => Promise<string | null>;
   reabrir: () => Promise<string | null>;
   vaciarTablero: () => Promise<string | null>;
-  /** Abrir la ficha de un número desde la lista de ventas. */
+  /** Abre la ficha de un número desde la lista de compradores. */
   onNumero: (numero: number) => void;
   confirmar: (titulo: string, o?: { texto?: string; aceptar?: string; peligro?: boolean }) => Promise<boolean>;
 };
@@ -33,12 +33,85 @@ const PESTANAS = [
   { id: 'diseno', titulo: 'Diseño' },
   { id: 'colores', titulo: 'Colores' },
   { id: 'mensaje', titulo: 'Mensaje' },
-  { id: 'ventas', titulo: 'Ventas' },
+  { id: 'compradores', titulo: 'Compradores' },
   { id: 'caja', titulo: 'Caja' },
   { id: 'cierre', titulo: 'Cierre' },
 ] as const;
 
 type Pestana = (typeof PESTANAS)[number]['id'];
+
+/** Cuántas opciones se ven antes de tener que pedir el resto. */
+const A_LA_VISTA = 6;
+
+type Opcion = { id: string; nombre: string; vista: ReactNode };
+
+/**
+ * Galería de opciones con su dibujo de verdad.
+ *
+ * Antes los fondos eran once botones de puro texto: para saber qué era
+ * «Art déco» había que ponerlo, bajar la vista al póster y volver. Y las
+ * paletas solo llevaban el nombre en `title`, que en un celular no existe
+ * porque no hay hover.
+ *
+ * Cerrada muestra seis; el resto se pide. Con dieciséis fondos, catorce
+ * paletas y dieciséis marcas, verlas todas de una convierte el panel en un
+ * muro y empuja el resto de la pestaña fuera de la pantalla.
+ */
+function Galeria({
+  etiqueta,
+  opciones,
+  activo,
+  clase,
+  onElegir,
+}: {
+  etiqueta: string;
+  opciones: Opcion[];
+  activo: string;
+  clase: string;
+  onElegir: (id: string) => void;
+}) {
+  const [todas, setTodas] = useState(false);
+  const primeras = opciones.slice(0, A_LA_VISTA);
+  const elegida = opciones.find((o) => o.id === activo);
+  // La que está puesta nunca puede quedar fuera: si no, al abrir la pestaña
+  // parece que no hay nada elegido.
+  const visibles = todas
+    ? opciones
+    : elegida && !primeras.includes(elegida)
+      ? [...primeras.slice(0, A_LA_VISTA - 1), elegida]
+      : primeras;
+  const ocultas = opciones.length - visibles.length;
+
+  return (
+    <div className="galeria">
+      <p className="panel__etiqueta">{etiqueta}</p>
+      <div className={`galeria__rejilla galeria__rejilla--${clase}`}>
+        {visibles.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            aria-pressed={o.id === activo}
+            className={`galeria__op${o.id === activo ? ' galeria__op--activa' : ''}`}
+            onClick={() => onElegir(o.id)}
+          >
+            <span className="galeria__vista">{o.vista}</span>
+            <span className="galeria__nombre">{o.nombre}</span>
+          </button>
+        ))}
+      </div>
+      {ocultas > 0 && (
+        <button type="button" className="galeria__mas" onClick={() => setTodas(true)}>
+          + {ocultas} más
+        </button>
+      )}
+      {todas && (
+        <button type="button" className="galeria__mas" onClick={() => setTodas(false)}>
+          Ver menos
+        </button>
+      )}
+    </div>
+  );
+}
 
 export function PanelConfig({
   estado,
@@ -178,24 +251,23 @@ export function PanelConfig({
           </label>
 
           {c.ocultarVendidos && (
-            <>
-              <p className="panel__etiqueta">Marca del puesto vendido</p>
-              <div className="panel__marcas">
-                {MARCAS.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    title={m.nombre}
-                    aria-label={m.nombre}
-                    aria-pressed={c.marca === m.id}
-                    className={`marca${c.marca === m.id ? ' marca--activa' : ''}`}
-                    onClick={() => set('marca', m.id)}
-                  >
-                    <Icono id={m.id} />
-                  </button>
-                ))}
-              </div>
-            </>
+            // La muestra es la casilla de verdad, no el icono suelto sobre
+            // blanco: lo que se elige es cómo queda el puesto en el tablero.
+            <Galeria
+              etiqueta="Marca del puesto vendido"
+              clase="marcas"
+              activo={c.marca}
+              onElegir={(id) => set('marca', id)}
+              opciones={MARCAS.map((m) => ({
+                id: m.id,
+                nombre: m.nombre,
+                vista: (
+                  <span className={`celda celda--pagado celda--${estiloPorId(c.estiloCelda)} vista-marca`}>
+                    <Icono id={m.id} className="celda__marca" />
+                  </span>
+                ),
+              }))}
+            />
           )}
 
           <label>
@@ -215,39 +287,39 @@ export function PanelConfig({
 
       {pestana === 'colores' && (
         <section className="panel__seccion">
-          <p className="panel__etiqueta">Fondo decorativo</p>
-          <div className="panel__fondos">
-            {FONDOS.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                aria-pressed={c.fondo === f.id}
-                className={`panel__opcion${c.fondo === f.id ? ' panel__opcion--activa' : ''}`}
-                onClick={() => set('fondo', f.id)}
-              >
-                {f.nombre}
-              </button>
-            ))}
-          </div>
+          {/* Cada fondo dibuja el suyo, con el color de la paleta puesta. */}
+          <Galeria
+            etiqueta="Fondo decorativo"
+            clase="fondos"
+            activo={c.fondo}
+            onElegir={(id) => set('fondo', id)}
+            opciones={FONDOS.map((f) => ({
+              id: f.id,
+              nombre: f.nombre,
+              vista: (
+                <span className="vista-fondo">
+                  <Florituras id={f.id} />
+                </span>
+              ),
+            }))}
+          />
 
-          <p className="panel__etiqueta">Paleta de colores</p>
-          <div className="panel__paletas">
-            {PALETAS.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                title={p.nombre}
-                aria-label={p.nombre}
-                aria-pressed={c.paleta === p.id}
-                className={`paleta${c.paleta === p.id ? ' paleta--activa' : ''}`}
-                style={{ background: p.fondo }}
-                onClick={() => set('paleta', p.id)}
-              >
-                <span style={{ background: p.acento }} />
-                <span style={{ background: p.claro }} />
-              </button>
-            ))}
-          </div>
+          <Galeria
+            etiqueta="Paleta de colores"
+            clase="paletas"
+            activo={c.paleta}
+            onElegir={(id) => set('paleta', id)}
+            opciones={PALETAS.map((p) => ({
+              id: p.id,
+              nombre: p.nombre,
+              vista: (
+                <span className="vista-paleta" style={{ background: p.fondo }}>
+                  <span style={{ background: p.acento }} />
+                  <span style={{ background: p.claro }} />
+                </span>
+              ),
+            }))}
+          />
 
           <label>
             Tipografía
@@ -303,7 +375,7 @@ export function PanelConfig({
         </section>
       )}
 
-      {pestana === 'ventas' && (
+      {pestana === 'compradores' && (
         <section className="panel__seccion">
           <ListaVentas estado={estado} onNumero={onNumero} />
         </section>
@@ -350,7 +422,7 @@ export function PanelConfig({
             </tbody>
           </table>
           <p className="panel__nota">
-            Toca un número apartado en el tablero para registrar el pago o avisarle al comprador.
+            Para cobrar, busca a la persona en Compradores y toca su número.
           </p>
         </section>
       )}
