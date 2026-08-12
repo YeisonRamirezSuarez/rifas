@@ -208,6 +208,21 @@ export function vender(
   };
 }
 
+/**
+ * Varios números para el mismo comprador, en una sola venta. Se valida todo o
+ * nada: si uno del lote está ocupado, no se vende ninguno y sale el error.
+ */
+export function venderVarios(
+  estado: Estado,
+  numeros: number[],
+  comprador: string,
+  telefono: string,
+  pago: Pago = 'pendiente',
+): Estado {
+  if (!numeros.length) throw new Error('Elige al menos un número.');
+  return numeros.reduce((e, n) => vender(e, n, comprador, telefono, pago), estado);
+}
+
 export function marcarPago(estado: Estado, numero: number, pago: Pago): Estado {
   const t = estado.tickets[numero];
   if (!t) throw new Error('Ese número no está vendido.');

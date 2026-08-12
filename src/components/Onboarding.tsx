@@ -20,6 +20,7 @@ export function Onboarding({ entrar, registrarse }: Props) {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [clave, setClave] = useState('');
+  const [verClave, setVerClave] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -94,14 +95,25 @@ export function Onboarding({ entrar, registrarse }: Props) {
         </label>
         <label>
           Contraseña
-          <input
-            type="password"
-            autoComplete={crear ? 'new-password' : 'current-password'}
-            value={clave}
-            onChange={(e) => setClave(e.target.value)}
-            required
-            minLength={6}
-          />
+          <span className="campo-clave">
+            <input
+              type={verClave ? 'text' : 'password'}
+              autoComplete={crear ? 'new-password' : 'current-password'}
+              value={clave}
+              onChange={(e) => setClave(e.target.value)}
+              required
+              minLength={6}
+            />
+            <button
+              type="button"
+              className="campo-clave__ojo"
+              onClick={() => setVerClave((v) => !v)}
+              aria-label={verClave ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              aria-pressed={verClave}
+            >
+              <IconoUI id={verClave ? 'ojoTapado' : 'ojo'} />
+            </button>
+          </span>
         </label>
 
         {aviso && <p className="dialogo__error">{aviso}</p>}

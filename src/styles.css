@@ -400,6 +400,18 @@ body {
   max-width: 620px;
 }
 
+.app__multiple {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+  width: min(100%, 26rem);
+}
+
+.app__multiple > * {
+  flex: 1 1 12rem;
+}
+
 .app__descargar {
   width: min(100%, 26rem);
   padding: 0.7rem 1rem;
@@ -688,6 +700,17 @@ body {
   width: 2em;
   height: 2em;
   transform: rotate(-15deg);
+}
+
+/* Marcada para la venta en lote. Anillo por fuera, no relleno: el relleno ya
+   dice si está libre, apartada o pagada, y taparlo perdería esa información. */
+.celda--elegida {
+  /* Crema, no vino: el anillo va sobre el fondo oscuro del póster y en vino
+     oscuro no se veía. */
+  outline: 0.55cqi solid var(--crema);
+  outline-offset: 0.25cqi;
+  transform: scale(1.08);
+  z-index: 1;
 }
 
 .celda--ganadora {
@@ -1108,6 +1131,40 @@ textarea {
   font-size: 1rem; /* 16px evita el zoom automático de iOS al enfocar */
   text-transform: none;
   letter-spacing: normal;
+}
+
+/* Contraseña con ojito: el botón va encima del campo, con hueco reservado a la
+   derecha para que el texto largo no le pase por debajo. */
+.campo-clave {
+  position: relative;
+  display: block;
+}
+
+.campo-clave input {
+  padding-right: 2.6rem;
+}
+
+.campo-clave__ojo {
+  position: absolute;
+  top: 50%;
+  right: 0.3rem;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--tinta);
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.campo-clave__ojo:hover,
+.campo-clave__ojo:focus-visible {
+  opacity: 1;
 }
 
 /* El width:100% de arriba estiraba también el checkbox y sacaba el texto del panel. */

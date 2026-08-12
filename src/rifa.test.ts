@@ -23,6 +23,7 @@ import {
   taparNombre,
   taparTelefono,
   vender,
+  venderVarios,
 } from './rifa';
 
 const conVenta = (n: number, nombre = 'Ana') => vender(ESTADO_INICIAL, n, nombre, '3162123456');
@@ -36,6 +37,17 @@ describe('rifa', () => {
     expect(etiqueta(0, 100)).toBe('00');
     expect(etiqueta(99, 100)).toBe('99');
     expect(etiqueta(7, 1000)).toBe('007');
+  });
+
+  it('vende varios números a la misma persona, o ninguno', () => {
+    const e = venderVarios(ESTADO_INICIAL, [4, 8, 15], 'Ana Ruiz', '3162123456', 'efectivo');
+    expect(Object.keys(e.tickets)).toEqual(['4', '8', '15']);
+    expect(e.tickets[15].comprador).toBe('Ana Ruiz');
+    expect(e.tickets[8].pago).toBe('efectivo');
+
+    // Uno ocupado tumba el lote entero: nada a medias.
+    expect(() => venderVarios(e, [20, 8], 'Beto', '3009998877')).toThrow('ya está vendido');
+    expect(() => venderVarios(ESTADO_INICIAL, [], 'Beto', '3009998877')).toThrow('al menos un número');
   });
 
   it('lista los clientes de la rifa sin repetir', () => {

@@ -14,10 +14,11 @@ import {
 
 type Props = {
   estado: Estado;
-  numero: number | null;
+  /** Los números que abrieron el diálogo. Vacío = cerrado; más de uno = venta en lote. */
+  numeros: number[];
   puedeEditar: boolean;
   onCerrar: () => void;
-  vender: (numero: number, comprador: string, telefono: string, pago: Pago) => Promise<string | null>;
+  vender: (numeros: number[], comprador: string, telefono: string, pago: Pago) => Promise<string | null>;
   marcarPago: (numero: number, pago: Pago) => Promise<string | null>;
   liberar: (numero: number) => Promise<string | null>;
   confirmar: (titulo: string, o?: { texto?: string; aceptar?: string; peligro?: boolean }) => Promise<boolean>;
@@ -31,7 +32,7 @@ const NOMBRE_PAGO: Record<Pago, string> = {
 
 export function DialogoNumero({
   estado,
-  numero,
+  numeros,
   puedeEditar,
   onCerrar,
   vender,
@@ -39,6 +40,9 @@ export function DialogoNumero({
   liberar,
   confirmar,
 }: Props) {
+  // Lo vendido y lo que se ve arriba manda el primero; el lote solo importa al vender.
+  const numero = numeros[0] ?? null;
+  const clave = numeros.join(',');
   const ref = useRef<HTMLDialogElement>(null);
   const [comprador, setComprador] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -60,7 +64,7 @@ export function DialogoNumero({
     setError(null);
     setDestapado(false);
     if (!d.open) d.showModal();
-  }, [numero]);
+  }, [clave]);
 
   const ticket = numero !== null ? estado.tickets[numero] : undefined;
   const total = estado.config.totalNumeros;
@@ -76,7 +80,16 @@ export function DialogoNumero({
       {numero !== null && (
         <>
           <h2 className="dialogo__titulo">
-            Número <strong>{etiqueta(numero, total)}</strong>
+            {numeros.length > 1 ? (
+              <>
+                {numeros.length} números{' '}
+                <strong>{numeros.map((n) => etiqueta(n, total)).join(', ')}</strong>
+              </>
+            ) : (
+              <>
+                Número <strong>{etiqueta(numero, total)}</strong>
+              </>
+            )}
           </h2>
 
           {ticket ? (
@@ -161,7 +174,7 @@ export function DialogoNumero({
               onSubmit={async (ev) => {
                 ev.preventDefault();
                 setEnviando(true);
-                const err = await vender(numero, comprador, telefono, pago);
+                const err = await vender(numeros, comprador, telefono, pago);
                 setEnviando(false);
                 if (err) setError(err);
                 else onCerrar();
@@ -221,7 +234,7 @@ export function DialogoNumero({
               {error && <p className="dialogo__error">{error}</p>}
               <div className="dialogo__acciones">
                 <button type="submit" className="boton--primario" disabled={enviando}>
-                  {enviando ? 'Vendiendo…' : 'Vender'}
+                  {enviando ? 'Vendiendo…' : numeros.length > 1 ? `Vender los ${numeros.length}` : 'Vender'}
                 </button>
                 <button type="button" onClick={onCerrar}>
                   Cancelar

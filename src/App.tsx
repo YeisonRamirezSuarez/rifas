@@ -23,7 +23,10 @@ export default function App() {
   const { confirmar, dialogo: dialogoConfirmar } = useConfirmar();
   useTema(rifa.estado.config.paleta, rifa.estado.config.tipografia);
 
-  const [seleccion, setSeleccion] = useState<number | null>(null);
+  // Números abiertos en el diálogo de venta. Vacío = diálogo cerrado.
+  const [venta, setVenta] = useState<number[]>([]);
+  // null = tocar un número lo abre. Lista = modo "varios para la misma persona".
+  const [elegidos, setElegidos] = useState<number[] | null>(null);
   // Cerrado en móvil: abierto sumaba dos pantallas de formulario antes de
   // llegar al tablero, que es a lo que se entra el 90% de las veces.
   const [panelAbierto, setPanelAbierto] = useState(() => window.innerWidth > 900);
@@ -38,6 +41,20 @@ export default function App() {
   // botón de crearla y el control del superadmin.
   const mostrarPanel = rifa.haySesion && cuenta.aprobado && panelAbierto;
   const cerrado = rifa.estado.config.finalizado && rifa.estado.config.numeroGanador !== null;
+
+  // En modo múltiple los libres se marcan y se desmarcan; uno ya vendido abre
+  // su ficha como siempre, que es la única forma de cobrarlo o liberarlo.
+  const tocarNumero = (n: number) => {
+    if (elegidos && !rifa.estado.tickets[n]) {
+      // Con el valor del render en vez de la función, dos toques seguidos leen
+      // la misma lista y el segundo se come al primero.
+      setElegidos((e) =>
+        (e ?? []).includes(n) ? (e ?? []).filter((x) => x !== n) : [...(e ?? []), n].sort((a, b) => a - b),
+      );
+      return;
+    }
+    setVenta([n]);
+  };
 
   const exportar = async (clave: string, nodo: HTMLElement | null, nombre: string) => {
     if (!nodo) return;
@@ -177,8 +194,29 @@ export default function App() {
             </div>
           ) : (
             <div className="app__poster">
-              <Poster ref={posterRef} estado={rifa.estado} onSeleccionar={setSeleccion} />
+              <Poster
+                ref={posterRef}
+                estado={rifa.estado}
+                onSeleccionar={tocarNumero}
+                elegidos={elegidos ?? []}
+              />
               <Leyenda config={rifa.estado.config} />
+              {rifa.puedeEditar && (
+                <div className="app__multiple">
+                  <button type="button" onClick={() => setElegidos((e) => (e ? null : []))}>
+                    {elegidos ? 'Salir de selección múltiple' : 'Vender varios a la misma persona'}
+                  </button>
+                  {elegidos && elegidos.length > 0 && (
+                    <button
+                      type="button"
+                      className="boton--primario"
+                      onClick={() => setVenta(elegidos)}
+                    >
+                      Vender {elegidos.length} {elegidos.length === 1 ? 'número' : 'números'}
+                    </button>
+                  )}
+                </div>
+              )}
               {/* Fuera de <Poster>: lo exportado es solo la lámina. */}
               {rifa.puedeEditar && (
                 <button
@@ -201,13 +239,18 @@ export default function App() {
 
       <DialogoNumero
         estado={rifa.estado}
-        numero={seleccion}
+        numeros={venta}
         puedeEditar={rifa.puedeEditar}
         vender={rifa.vender}
         marcarPago={rifa.marcarPago}
         liberar={rifa.liberar}
         confirmar={confirmar}
-        onCerrar={() => setSeleccion(null)}
+        onCerrar={() => {
+          setVenta([]);
+          // Al cerrar se limpia lo marcado pero el modo sigue puesto: casi
+          // siempre viene otro comprador con otro puñado de números.
+          if (elegidos?.length) setElegidos([]);
+        }}
       />
 
       {dialogoConfirmar}

@@ -4,10 +4,10 @@ import { IconoUI } from '../marcas';
 import { etiqueta, formatearFecha, formatearPrecio, type Estado } from '../rifa';
 import { Tablero } from './Tablero';
 
-type Props = { estado: Estado; onSeleccionar: (numero: number) => void };
+type Props = { estado: Estado; onSeleccionar: (numero: number) => void; elegidos?: number[] };
 
 export const Poster = forwardRef<HTMLElement, Props>(function Poster(
-  { estado, onSeleccionar },
+  { estado, onSeleccionar, elegidos },
   ref,
 ) {
   const c = estado.config;
@@ -41,7 +41,7 @@ export const Poster = forwardRef<HTMLElement, Props>(function Poster(
         {c.loteria && <p className="poster__loteria">{c.loteria}</p>}
       </header>
 
-      <Tablero estado={estado} onSeleccionar={onSeleccionar} />
+      <Tablero estado={estado} onSeleccionar={onSeleccionar} elegidos={elegidos} />
 
       <footer className="poster__pie">
         {c.finalizado && c.numeroGanador !== null ? (

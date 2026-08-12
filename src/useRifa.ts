@@ -9,7 +9,7 @@ import {
   marcarPago as marcarPagoPuro,
   reabrir as reabrirPuro,
   slugificar,
-  vender as venderPuro,
+  venderVarios as venderPuro,
   type Config,
   type Estado,
   type Pago,
@@ -287,22 +287,33 @@ export function useRifa() {
   /* ---------- números ---------- */
 
   const vender = useCallback(
-    async (numero: number, comprador: string, telefono: string, pago: Pago = 'pendiente') => {
+    async (numeros: number[], comprador: string, telefono: string, pago: Pago = 'pendiente') => {
       try {
-        const siguiente = venderPuro(estado, numero, comprador, telefono, pago); // valida
+        const lote = [...new Set(numeros)];
+        const siguiente = venderPuro(estado, lote, comprador, telefono, pago); // valida el lote entero
         if (!nube) {
           ponerEstado(actual, siguiente);
           return null;
         }
-        const t = siguiente.tickets[numero];
-        const { error } = await nube.from('numeros').insert({ rifa_id: actual, numero, pago });
+        const t = siguiente.tickets[lote[0]];
+        // Un solo insert con todas las filas: en Postgres es una sentencia, así que
+        // o entran todos los números o no entra ninguno.
+        const { error } = await nube
+          .from('numeros')
+          .insert(lote.map((numero) => ({ rifa_id: actual, numero, pago })));
         // 23505 = choque de primary key: alguien más lo vendió primero.
-        if (error) return error.code === '23505' ? 'Ese número ya está vendido.' : error.message;
+        if (error) {
+          return error.code === '23505'
+            ? lote.length > 1
+              ? 'Alguno de esos números ya está vendido.'
+              : 'Ese número ya está vendido.'
+            : error.message;
+        }
         const dato = await nube
           .from('compradores')
-          .insert({ rifa_id: actual, numero, nombre: t.comprador, telefono: t.telefono });
+          .insert(lote.map((numero) => ({ rifa_id: actual, numero, nombre: t.comprador, telefono: t.telefono })));
         if (dato.error) {
-          await nube.from('numeros').delete().eq('rifa_id', actual).eq('numero', numero); // deshacer venta a medias
+          await nube.from('numeros').delete().eq('rifa_id', actual).in('numero', lote); // deshacer venta a medias
           return dato.error.message;
         }
         return null;
