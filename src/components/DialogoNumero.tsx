@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { IconoUI } from '../marcas';
 import {
+  clientes,
   etiqueta,
   linkComprador,
   METODOS,
+  soloDigitos,
   taparNombre,
   taparTelefono,
   type Estado,
@@ -62,6 +64,12 @@ export function DialogoNumero({
 
   const ticket = numero !== null ? estado.tickets[numero] : undefined;
   const total = estado.config.totalNumeros;
+
+  // Quien ya compró en esta rifa. Al escribir el nombre o los primeros dígitos
+  // del teléfono, el navegador sugiere, y al elegir se llena el otro campo.
+  const conocidos = clientes(estado);
+  // Dos personas con el mismo nombre y distinto teléfono: en la lista de nombres va una.
+  const porNombre = conocidos.filter((c, i) => conocidos.findIndex((o) => o.nombre === c.nombre) === i);
 
   return (
     <dialog ref={ref} className="dialogo" onClose={onCerrar}>
@@ -161,17 +169,47 @@ export function DialogoNumero({
             >
               <label>
                 Nombre del comprador
-                <input value={comprador} onChange={(e) => setComprador(e.target.value)} autoFocus />
+                <input
+                  value={comprador}
+                  list="clientes-nombre"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setComprador(v);
+                    const c = conocidos.find((x) => x.nombre === v.trim());
+                    if (c) setTelefono(c.telefono);
+                  }}
+                  autoFocus
+                />
               </label>
               <label>
                 Teléfono
                 <input
                   value={telefono}
-                  onChange={(e) => setTelefono(e.target.value)}
+                  list="clientes-telefono"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setTelefono(v);
+                    const c = conocidos.find((x) => x.telefono === soloDigitos(v));
+                    if (c) setComprador(c.nombre);
+                  }}
                   inputMode="tel"
                   placeholder="3162123456"
                 />
               </label>
+              <datalist id="clientes-nombre">
+                {porNombre.map((c) => (
+                  <option key={c.telefono} value={c.nombre}>
+                    {c.telefono}
+                  </option>
+                ))}
+              </datalist>
+              <datalist id="clientes-telefono">
+                {conocidos.map((c) => (
+                  <option key={c.telefono} value={c.telefono}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </datalist>
               <label>
                 Pago
                 <select value={pago} onChange={(e) => setPago(e.target.value as Pago)}>

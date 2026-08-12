@@ -335,3 +335,20 @@ export function linkComprador(estado: Estado, numero: number): string {
     mensajeComprador(estado, numero),
   )}`;
 }
+
+export type Cliente = { nombre: string; telefono: string };
+
+/**
+ * Quienes ya compraron en esta rifa, sin repetir. Sirve para no volver a teclear
+ * nombre y teléfono cuando la misma persona pide un segundo o tercer puesto.
+ * Un teléfono = una persona: si cambió el nombre, manda el de la venta más nueva.
+ */
+export function clientes(estado: Estado): Cliente[] {
+  const porTelefono = new Map<string, Cliente>();
+  const ventas = Object.values(estado.tickets).sort((a, b) => a.vendidoEn.localeCompare(b.vendidoEn));
+  for (const t of ventas) {
+    if (t.comprador.trim().length < 2 || !t.telefono) continue;
+    porTelefono.set(t.telefono, { nombre: t.comprador.trim(), telefono: t.telefono });
+  }
+  return [...porTelefono.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+}

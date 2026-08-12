@@ -3,6 +3,7 @@ import { FONDOS, fondoPorId } from './fondos';
 import { estiloPorId, marcaPorId, MARCAS } from './marcas';
 import { PALETAS, TIPOGRAFIAS } from './temas';
 import {
+  clientes,
   ESTADO_INICIAL,
   estadoNumero,
   etiqueta,
@@ -35,6 +36,17 @@ describe('rifa', () => {
     expect(etiqueta(0, 100)).toBe('00');
     expect(etiqueta(99, 100)).toBe('99');
     expect(etiqueta(7, 1000)).toBe('007');
+  });
+
+  it('lista los clientes de la rifa sin repetir', () => {
+    let e = vender(ESTADO_INICIAL, 1, 'Ana Ruiz', '3162123456');
+    e = vender(e, 2, 'Ana Ruiz', '3162123456'); // mismo cliente, segundo puesto
+    e = vender(e, 3, 'Beto Paz', '3009998877');
+    expect(clientes(e)).toEqual([
+      { nombre: 'Ana Ruiz', telefono: '3162123456' },
+      { nombre: 'Beto Paz', telefono: '3009998877' },
+    ]);
+    expect(clientes(liberar(e, 3))).toHaveLength(1);
   });
 
   it('tapa datos del comprador', () => {
