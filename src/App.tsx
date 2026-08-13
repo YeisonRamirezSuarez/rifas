@@ -90,6 +90,16 @@ function BarraTablero({ estado, abrir }: { estado: Estado; abrir: (n: number) =>
   );
 }
 
+/** Espera de la app. El logo ya trae su propia animación dentro del SVG. */
+function Cargando({ texto }: { texto: string }) {
+  return (
+    <p className="app__cargando" role="status" aria-live="polite">
+      <img src="/logo.svg" alt="" className="app__cargando-logo" />
+      {texto}
+    </p>
+  );
+}
+
 export default function App() {
   const rifa = useRifa();
   const cuenta = usePerfil(rifa.usuarioId);
@@ -149,7 +159,7 @@ export default function App() {
     return (
       <main className="app app--onb">
         {rifa.cargando ? (
-          <p className="app__cargando">Cargando…</p>
+          <Cargando texto="Cargando…" />
         ) : (
           <Onboarding
             entrar={rifa.entrar}
@@ -173,7 +183,7 @@ export default function App() {
     return (
       <main className="app app--publico">
         {rifa.cargando ? (
-          <p className="app__cargando">Cargando rifa…</p>
+          <Cargando texto="Cargando rifa…" />
         ) : (
           <>
             {cerrado ? (
@@ -201,11 +211,26 @@ export default function App() {
     );
   }
 
+  // Con sesión pero sin saber todavía quién es: ni app ni sala de espera.
+  // También cubre el reintento desde EnEspera, que si no parpadeaba al tablero.
+  if (rifa.haySesion && rifa.hayNube && cuenta.cargando) {
+    return (
+      <main className="app">
+        <Cargando texto="Cargando…" />
+      </main>
+    );
+  }
+
   // Cuenta creada pero todavía sin aprobar por un superadmin.
   if (rifa.haySesion && rifa.hayNube && !cuenta.cargando && !cuenta.aprobado) {
     return (
       <main className="app">
-        <EnEspera perfil={cuenta.perfil} salir={rifa.salir} />
+        <EnEspera
+          perfil={cuenta.perfil}
+          error={cuenta.error}
+          reintentar={() => cuenta.recargarPerfil()}
+          salir={rifa.salir}
+        />
       </main>
     );
   }
@@ -287,9 +312,9 @@ export default function App() {
       )}
 
       {rifa.cargando ? (
-        <p className="app__cargando">Cargando rifa…</p>
+        <Cargando texto="Cargando rifa…" />
       ) : rifa.sinRifas ? (
-        <p className="app__cargando">Crea tu primera rifa para empezar.</p>
+        <p className="app__vacio">Crea tu primera rifa para empezar.</p>
       ) : (
         <div className="app__laminas">
           {errorExport && <p className="dialogo__error">{errorExport}</p>}

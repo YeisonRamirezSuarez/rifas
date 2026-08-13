@@ -123,6 +123,7 @@ export function useRifa() {
   const [slugs, setSlugs] = useState<Record<string, string>>({});
   const [admin, setAdmin] = useState<string | null>(null); // id del usuario
   const [cargando, setCargando] = useState(!!nube);
+  const [sesionLista, setSesionLista] = useState(!nube);
   const configPendiente = useRef(false);
   const temporizador = useRef<ReturnType<typeof setTimeout>>();
 
@@ -138,8 +139,15 @@ export function useRifa() {
   // Sesión.
   useEffect(() => {
     if (!nube) return;
-    nube.auth.getSession().then(({ data }) => setAdmin(data.session?.user.id ?? null));
-    const { data } = nube.auth.onAuthStateChange((_e, sesion) => setAdmin(sesion?.user.id ?? null));
+    nube.auth
+      .getSession()
+      .then(({ data }) => setAdmin(data.session?.user.id ?? null))
+      // Aunque falle hay que seguir: quedarse esperando deja la app en blanco.
+      .finally(() => setSesionLista(true));
+    const { data } = nube.auth.onAuthStateChange((_e, sesion) => {
+      setAdmin(sesion?.user.id ?? null);
+      setSesionLista(true);
+    });
     return () => data.subscription.unsubscribe();
   }, []);
 
@@ -147,6 +155,7 @@ export function useRifa() {
   useEffect(() => {
     if (!nube) return;
     let vivo = true;
+    if (admin) setCargando(true);
 
     (async () => {
       const propias = admin
@@ -177,7 +186,9 @@ export function useRifa() {
       }
       if (!vivo) return;
       setAlmacen((a) => ({ rifas: a.rifas, actual: elegida }));
-      if (!elegida) setCargando(false);
+      // Si la rifa elegida es la que ya estaba, el efecto que la carga no se
+      // vuelve a disparar: hay que apagar la espera aquí o se queda colgada.
+      if (!elegida || elegida === actual) setCargando(false);
     })();
 
     return () => {
@@ -442,6 +453,10 @@ export function useRifa() {
         options: { data: { nombre } },
       });
       if (error) return error.message;
+      // Supabase no delata qué correos existen: si ya hay cuenta responde bien,
+      // pero sin identidades. Sin esto se culpaba a la confirmación de correo.
+      if (data.user && data.user.identities?.length === 0)
+        return 'Ya existe una cuenta con ese correo. Entra con tu contraseña o recupérala.';
       // Sin sesión = el proyecto todavía tiene *Confirm email* activo en Supabase.
       // Con esa opción puesta no hay token, y sin token no sale el correo de
       // Brevo ni se registra la solicitud: hay que apagarla en el panel.
@@ -465,8 +480,7 @@ export function useRifa() {
 
   return {
     estado,
-    cargando,
-    /** Sin nube todo es editable (uso local). Con nube, solo el dueño de la rifa. */
+    cargando: cargando || !sesionLista,
     puedeEditar: !nube || (!!admin && propia),
     hayNube: !!nube,
     haySesion: !nube || !!admin,

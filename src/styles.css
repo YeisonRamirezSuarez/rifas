@@ -123,8 +123,28 @@ dd,
 }
 
 .app__cargando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4rem;
+  min-height: 70vh;
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+.app__vacio {
   margin: 3rem 0;
   color: var(--tinta-suave);
+}
+
+/* La tómbola manda: ocupa la pantalla y ya trae su propio giro dentro del SVG. */
+.app__cargando-logo {
+  width: clamp(9rem, 26vw, 15rem);
+  height: auto;
 }
 
 .acceso {
@@ -303,6 +323,18 @@ dd,
   font-size: 0.92rem;
   line-height: 1.55;
   opacity: 0.85;
+}
+
+.espera__detalle {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.5;
+  overflow-wrap: anywhere;
+}
+
+.espera__acciones {
+  display: flex;
+  gap: 0.6rem;
 }
 
 .espera__precio {
