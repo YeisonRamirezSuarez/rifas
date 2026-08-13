@@ -137,8 +137,21 @@ dd,
 }
 
 .app__vacio {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
   margin: 3rem 0;
   color: var(--tinta-suave);
+  text-align: center;
+}
+
+.app__vacio p {
+  margin: 0;
+}
+
+.app__vacio button {
+  min-height: 2.75rem;
+  padding-inline: 1.4rem;
 }
 
 /* La tómbola manda: ocupa la pantalla y ya trae su propio giro dentro del SVG. */
@@ -168,7 +181,7 @@ dd,
   display: grid;
   grid-template-columns: 1fr minmax(320px, 400px);
   gap: 3rem;
-  align-items: center;
+  align-items: start;
   max-width: 1140px;
   margin: 0 auto;
   padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 2.5rem);
@@ -181,9 +194,19 @@ dd,
   }
 
   /* En móvil el que vuelve entra a firmar, no a leer: el formulario va de
-     primero y el argumento de venta queda debajo. */
+     primero y el argumento de venta queda debajo. La columna derecha se
+     deshace (display: contents) para que la muestra pueda irse al final: a
+     ancho completo mide media pantalla y enterraba el precio y las ventajas. */
+  .onb .onb__lado {
+    display: contents;
+  }
+
   .onb__form {
     order: -1;
+  }
+
+  .onb__muestra {
+    order: 1;
   }
 }
 
@@ -286,8 +309,34 @@ dd,
   opacity: 0.75;
 }
 
+.onb__lado {
+  display: grid;
+  align-content: start;
+  gap: 1.75rem;
+}
+
 .onb__form {
   align-self: start;
+}
+
+/* La muestra es la lámina de verdad, montada con el mismo componente que
+   exporta el PNG: la portada prometía un póster y no enseñaba ninguno. Si el
+   póster cambia, esto cambia con él; una captura se habría quedado vieja. */
+.onb__muestra {
+  display: grid;
+  justify-items: center;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.onb__lamina {
+  width: 100%;
+}
+
+.onb__muestra figcaption {
+  font-size: 0.78rem;
+  text-align: center;
+  color: var(--tinta-suave);
 }
 
 .onb__cta {
@@ -1682,19 +1731,32 @@ button:focus-visible,
   box-shadow: var(--sombra);
 }
 
+/* Tres cuentas y una plata, separadas por filetes: cuatro cajas grises del
+   mismo tamaño decían que las cuatro cifras pesan igual, y la que se mira
+   antes de salir a cobrar es la última. */
 .tbar__cifras {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
+  /* Las cuentas se agrupan a la izquierda y la plata se va al otro extremo:
+     repartidas a partes iguales, los filetes quedaban lejos de su cifra. */
+  grid-template-columns: repeat(3, auto) minmax(0, 1fr);
+  align-items: end;
+  gap: 0 0.85rem;
   margin: 0;
 }
 
+/* column-reverse: en el marcado va dt y luego dd, pero lo que se escanea es la
+   cifra; la etiqueta la explica debajo. */
 .tbar__cifras > div {
-  display: grid;
-  gap: 0.15rem;
-  padding: 0.45rem 0.6rem;
-  background: var(--banda);
-  border-radius: var(--radio);
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.1rem;
+  padding-left: 0.85rem;
+  border-left: 1px solid var(--borde);
+}
+
+.tbar__cifras > div:first-child {
+  padding-left: 0;
+  border-left: 0;
 }
 
 .tbar__cifras dt {
@@ -1707,16 +1769,23 @@ button:focus-visible,
 .tbar__cifras dd {
   margin: 0;
   font-family: var(--ui-serif);
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   font-weight: 600;
   line-height: 1.05;
   font-variant-numeric: tabular-nums;
 }
 
-/* La cifra de dinero es la más larga: baja de cuerpo para no partirse. */
+/* La colilla del talonario: lo que falta cobrar se corta con la perforación y
+   se lleva el cuerpo más grande. Es la cifra con la que se sale a la calle. */
+.tbar__cifras > .tbar__cobrar {
+  margin-left: auto;
+  border-left-style: dashed;
+  border-left-color: var(--borde-fuerte);
+}
+
 .tbar__cobrar dd {
-  font-size: 1rem;
-  line-height: 1.35;
+  font-size: 1.5rem;
+  white-space: nowrap;
 }
 
 /* Ocre y no rojo: es plata por cobrar, no un error. */
@@ -1729,8 +1798,10 @@ button:focus-visible,
   gap: 0.5rem;
 }
 
+/* Lo que se escribe son dos cifras: un campo a todo lo ancho prometía una
+   búsqueda por nombre que este campo no hace. */
 .tbar__ir-campo input {
-  flex: 1;
+  flex: 0 1 9rem;
   min-width: 0;
 }
 
@@ -1806,15 +1877,48 @@ button:focus-visible,
 }
 
 @media (max-width: 560px) {
-  /* Cuatro columnas dejaban la cifra de dinero en 58px. */
+  /* Cuatro columnas dejaban la cifra de dinero en 58px. Las tres cuentas
+     caben en fila; la colilla baja y se lee como el total de un recibo. */
   .tbar__cifras {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tbar__cifras > .tbar__cobrar {
+    grid-column: 1 / -1;
+    margin-left: 0;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.7rem;
+    padding: 0.7rem 0 0;
+    border-left: 0;
+    border-top: 1px dashed var(--borde-fuerte);
+  }
+
+  .tbar__cobrar dd {
+    font-size: 1.35rem;
   }
 }
 
 /* ---------- blancos de dedo ---------- */
 
 @media (pointer: coarse) {
+  .onb__form input,
+  .onb__cambio,
+  .campo-clave__ojo {
+    min-height: 2.75rem;
+  }
+
+  /* El ojo pasa a blanco de dedo: el campo le abre el hueco a la derecha. */
+  .campo-clave__ojo {
+    width: 2.75rem;
+  }
+
+  .campo-clave input {
+    padding-right: 3.3rem;
+  }
+
   .app__barra button,
   .panel__tab,
   .misrifas__item,

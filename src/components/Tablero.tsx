@@ -22,7 +22,7 @@ export function Tablero({ estado, onSeleccionar, elegidos = [] }: Props) {
   return (
     <div
       className="tablero"
-      role="grid"
+      role="group"
       aria-label="Números de la rifa"
       // Cuántas cifras trae la etiqueta más larga. El cuerpo del número se
       // reparte entre ellas: con 100 números son dos y se ven grandes.
@@ -37,7 +37,6 @@ export function Tablero({ estado, onSeleccionar, elegidos = [] }: Props) {
           <button
             key={n}
             type="button"
-            role="gridcell"
             className={`celda celda--${situacion} celda--${estilo}${
               esGanador ? ' celda--ganadora' : ''
             }${elegido ? ' celda--elegida' : ''}`}

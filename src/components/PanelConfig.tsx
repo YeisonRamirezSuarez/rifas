@@ -125,6 +125,7 @@ export function PanelConfig({
   const c = estado.config;
   const r = reporte(estado);
   const [pestana, setPestana] = useState<Pestana>('sorteo');
+  const [intentoTotal, setIntentoTotal] = useState(0);
   const [ganadorTexto, setGanadorTexto] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -141,6 +142,8 @@ export function PanelConfig({
             key={p.id}
             type="button"
             role="tab"
+            id={`tab-${p.id}`}
+            aria-controls={`panel-${p.id}`}
             aria-selected={pestana === p.id}
             className={`panel__tab${pestana === p.id ? ' panel__tab--activa' : ''}`}
             onClick={() => setPestana(p.id)}
@@ -151,7 +154,12 @@ export function PanelConfig({
       </nav>
 
       {pestana === 'sorteo' && (
-        <section className="panel__seccion">
+        <section
+          className="panel__seccion"
+          role="tabpanel"
+          id={`panel-${pestana}`}
+          aria-labelledby={`tab-${pestana}`}
+        >
           <label>
             Qué se rifa
             <input
@@ -194,11 +202,32 @@ export function PanelConfig({
           </div>
           <label>
             Cantidad de números
+            {/* Achicar el tablero borra lo vendido que quede fuera del rango, y
+                eso hasta ahora pasaba sin avisar: un 5 de más al teclear «50»
+                se llevaba medio tablero por delante. */}
             <CampoNumero
+              key={`total-${c.totalNumeros}-${intentoTotal}`}
               valor={c.totalNumeros}
               min={1}
               max={1000}
-              onCambio={(v) => set('totalNumeros', v)}
+              onCambio={async (v) => {
+                const afuera = Object.keys(estado.tickets).filter((n) => Number(n) >= v).length;
+                if (afuera) {
+                  const ok = await confirmar(`¿Dejar el tablero en ${v} números?`, {
+                    texto:
+                      afuera === 1
+                        ? 'Un número vendido queda fuera del nuevo rango: se borra junto con los datos de su comprador.'
+                        : `${afuera} números vendidos quedan fuera del nuevo rango: se borran junto con los datos de sus compradores.`,
+                    aceptar: 'Cambiar el tablero',
+                    peligro: true,
+                  });
+                  if (!ok) {
+                    setIntentoTotal((i) => i + 1);
+                    return;
+                  }
+                }
+                set('totalNumeros', v);
+              }}
             />
           </label>
           <p className="panel__nota">Los campos numéricos se aplican al salir del campo.</p>
@@ -206,7 +235,12 @@ export function PanelConfig({
       )}
 
       {pestana === 'diseno' && (
-        <section className="panel__seccion">
+        <section
+          className="panel__seccion"
+          role="tabpanel"
+          id={`panel-${pestana}`}
+          aria-labelledby={`tab-${pestana}`}
+        >
           <label>
             Título
             <input value={c.titulo} onChange={(e) => set('titulo', e.target.value)} />
@@ -286,7 +320,12 @@ export function PanelConfig({
       )}
 
       {pestana === 'colores' && (
-        <section className="panel__seccion">
+        <section
+          className="panel__seccion"
+          role="tabpanel"
+          id={`panel-${pestana}`}
+          aria-labelledby={`tab-${pestana}`}
+        >
           {/* Cada fondo dibuja el suyo, con el color de la paleta puesta. */}
           <Galeria
             etiqueta="Fondo decorativo"
@@ -335,7 +374,12 @@ export function PanelConfig({
       )}
 
       {pestana === 'mensaje' && (
-        <section className="panel__seccion">
+        <section
+          className="panel__seccion"
+          role="tabpanel"
+          id={`panel-${pestana}`}
+          aria-labelledby={`tab-${pestana}`}
+        >
           <p className="panel__nota">
             Variables disponibles: {VARIABLES.map((v) => `{${v}}`).join('  ')}
           </p>
@@ -376,13 +420,23 @@ export function PanelConfig({
       )}
 
       {pestana === 'compradores' && (
-        <section className="panel__seccion">
+        <section
+          className="panel__seccion"
+          role="tabpanel"
+          id={`panel-${pestana}`}
+          aria-labelledby={`tab-${pestana}`}
+        >
           <ListaVentas estado={estado} onNumero={onNumero} />
         </section>
       )}
 
       {pestana === 'caja' && (
-        <section className="panel__seccion">
+        <section
+          className="panel__seccion"
+          role="tabpanel"
+          id={`panel-${pestana}`}
+          aria-labelledby={`tab-${pestana}`}
+        >
           <dl className="panel__resumen">
             <div>
               <dt>Disponibles</dt>
@@ -428,7 +482,12 @@ export function PanelConfig({
       )}
 
       {pestana === 'cierre' && (
-        <section className="panel__seccion">
+        <section
+          className="panel__seccion"
+          role="tabpanel"
+          id={`panel-${pestana}`}
+          aria-labelledby={`tab-${pestana}`}
+        >
           {c.finalizado && c.numeroGanador !== null ? (
             <>
               <p className="panel__nota">

@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { DashboardSuper } from './components/DashboardSuper';
 import { DialogoImagen } from './components/DialogoImagen';
 import { EnEspera } from './components/EnEspera';
@@ -105,6 +105,11 @@ export default function App() {
   const cuenta = usePerfil(rifa.usuarioId);
   const { confirmar, dialogo: dialogoConfirmar } = useConfirmar();
   useTema(rifa.estado.config.paleta, rifa.estado.config.tipografia);
+
+  useEffect(() => {
+    const titulo = rifa.estado.config.titulo.trim();
+    document.title = rifa.rifaActual && titulo ? `${titulo} · Rifas` : 'Rifas';
+  }, [rifa.estado.config.titulo, rifa.rifaActual]);
 
   // Números abiertos en el diálogo de venta. Vacío = diálogo cerrado.
   const [venta, setVenta] = useState<number[]>([]);
@@ -314,7 +319,18 @@ export default function App() {
       {rifa.cargando ? (
         <Cargando texto="Cargando rifa…" />
       ) : rifa.sinRifas ? (
-        <p className="app__vacio">Crea tu primera rifa para empezar.</p>
+         <div className="app__vacio">
+          <p>Todavía no tienes ninguna rifa.</p>
+          {!panelAbierto && (
+            <button
+              type="button"
+              className="boton--primario"
+              onClick={() => setPanelAbierto(true)}
+            >
+              Crear mi primera rifa
+            </button>
+          )}
+        </div>
       ) : (
         <div className="app__laminas">
           {errorExport && <p className="dialogo__error">{errorExport}</p>}
