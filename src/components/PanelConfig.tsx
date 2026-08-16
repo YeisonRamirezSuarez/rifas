@@ -13,6 +13,7 @@ import {
 import { FONDOS, Florituras } from '../fondos';
 import { estiloPorId, ESTILOS_CELDA, Icono, MARCAS } from '../marcas';
 import { PALETAS, TIPOGRAFIAS } from '../temas';
+import type { EstadoGuardado } from '../useRifa';
 import { CampoNumero } from './CampoNumero';
 import { Leyenda } from './Leyenda';
 import { ListaVentas } from './ListaVentas';
@@ -20,6 +21,9 @@ import { ListaVentas } from './ListaVentas';
 type Props = {
   estado: Estado;
   configurar: (config: Config) => void;
+  guardado: EstadoGuardado;
+  errorGuardado: string | null;
+  reintentarGuardado: () => Promise<void>;
   finalizar: (numeroGanador: number) => Promise<string | null>;
   reabrir: () => Promise<string | null>;
   vaciarTablero: () => Promise<string | null>;
@@ -116,6 +120,9 @@ function Galeria({
 export function PanelConfig({
   estado,
   configurar,
+  guardado,
+  errorGuardado,
+  reintentarGuardado,
   finalizar,
   reabrir,
   vaciarTablero,
@@ -146,12 +153,36 @@ export function PanelConfig({
             aria-controls={`panel-${p.id}`}
             aria-selected={pestana === p.id}
             className={`panel__tab${pestana === p.id ? ' panel__tab--activa' : ''}`}
-            onClick={() => setPestana(p.id)}
+            // El aviso lo escriben «Sorteo» y «Cierre», pero se pinta arriba de las dos:
+            // sin limpiarlo, el rechazo de un total se queda colgado sobre otra pestaña.
+            onClick={() => {
+              setPestana(p.id);
+              setError(null);
+            }}
           >
             {p.titulo}
           </button>
         ))}
       </nav>
+
+      <p className="panel__guardado" role="status" aria-live="polite">
+        {guardado === 'guardando' && 'Guardando…'}
+        {guardado === 'guardado' && 'Guardado.'}
+        {guardado === 'fallo' && (
+          <>
+            <span className="panel__guardado--mal">
+              No se pudo guardar{errorGuardado ? `: ${errorGuardado}` : '.'}
+            </span>{' '}
+            <button type="button" className="boton" onClick={reintentarGuardado}>
+              Reintentar
+            </button>
+          </>
+        )}
+      </p>
+
+      {/* Fuera de las pestañas: el aviso lo levantan tanto «Sorteo» (total inválido)
+          como «Cierre» (finalizar), y dentro de una sola pestaña el otro no se vería. */}
+      {error && <p className="dialogo__error" role="alert">{error}</p>}
 
       {pestana === 'sorteo' && (
         <section
@@ -202,30 +233,25 @@ export function PanelConfig({
           </div>
           <label>
             Cantidad de números
-            {/* Achicar el tablero borra lo vendido que quede fuera del rango, y
-                eso hasta ahora pasaba sin avisar: un 5 de más al teclear «50»
-                se llevaba medio tablero por delante. */}
+            {/* Achicar el tablero por debajo de lo vendido ya no borra nada: la base
+                rechaza ese guardado con RIF01. Se avisa acá y no se toca el estado,
+                para que la pantalla no muestre un tablero que el guardado va a negar. */}
             <CampoNumero
               key={`total-${c.totalNumeros}-${intentoTotal}`}
               valor={c.totalNumeros}
               min={1}
               max={1000}
-              onCambio={async (v) => {
-                const afuera = Object.keys(estado.tickets).filter((n) => Number(n) >= v).length;
-                if (afuera) {
-                  const ok = await confirmar(`¿Dejar el tablero en ${v} números?`, {
-                    texto:
-                      afuera === 1
-                        ? 'Un número vendido queda fuera del nuevo rango: se borra junto con los datos de su comprador.'
-                        : `${afuera} números vendidos quedan fuera del nuevo rango: se borran junto con los datos de sus compradores.`,
-                    aceptar: 'Cambiar el tablero',
-                    peligro: true,
-                  });
-                  if (!ok) {
-                    setIntentoTotal((i) => i + 1);
-                    return;
-                  }
+              onCambio={(v) => {
+                const vendidos = Object.keys(estado.tickets).map(Number);
+                const max = vendidos.length ? Math.max(...vendidos) : -1;
+                if (max >= v) {
+                  setError(
+                    `No se puede bajar a ${v}: hay números vendidos hasta el ${max}. Libéralos primero.`,
+                  );
+                  setIntentoTotal((i) => i + 1);
+                  return;
                 }
+                setError(null);
                 set('totalNumeros', v);
               }}
             />
@@ -522,7 +548,6 @@ export function PanelConfig({
               </button>
             </form>
           )}
-          {error && <p className="dialogo__error">{error}</p>}
 
           <button
             type="button"

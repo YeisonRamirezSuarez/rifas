@@ -84,9 +84,14 @@ describe('rifa', () => {
     expect(() => vender(conVenta(5), 5, 'Beto', '3009998877')).toThrow();
   });
 
-  it('al reducir el total descarta los números que ya no existen', () => {
+  it('reducir el total nunca borra una venta: el total se frena en el vendido más alto', () => {
     const r = guardarConfig(conVenta(80), { ...ESTADO_INICIAL.config, totalNumeros: 50 });
-    expect(r.tickets[80]).toBeUndefined();
+    expect(r.tickets[80]).toBeDefined();
+    expect(r.config.totalNumeros).toBe(81); // base cero: el 80 necesita 81 números
+  });
+
+  it('sin ventas por encima, el total pedido se respeta', () => {
+    const r = guardarConfig(conVenta(20), { ...ESTADO_INICIAL.config, totalNumeros: 50 });
     expect(r.config.totalNumeros).toBe(50);
   });
 
@@ -190,7 +195,8 @@ describe('rifa', () => {
   });
 
   it('reducir el total por debajo del ganador reabre la rifa', () => {
-    const s = finalizar(conVenta(80), 80);
+    // Ganador sin vender: si estuviera vendido, el total ya no podría bajar de él.
+    const s = finalizar(ESTADO_INICIAL, 80);
     const r = guardarConfig(s, { ...s.config, totalNumeros: 50 });
     expect(r.config.numeroGanador).toBeNull();
     expect(r.config.finalizado).toBe(false);

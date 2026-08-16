@@ -5,7 +5,9 @@ import { EnEspera } from './components/EnEspera';
 import { DialogoNumero } from './components/DialogoNumero';
 import { Ganador } from './components/Ganador';
 import { Leyenda } from './components/Leyenda';
+import { MiCuenta } from './components/MiCuenta';
 import { MisRifas } from './components/MisRifas';
+import { NuevaClave } from './components/NuevaClave';
 import { Onboarding } from './components/Onboarding';
 import { PanelConfig } from './components/PanelConfig';
 import { PanelSuperadmin } from './components/PanelSuperadmin';
@@ -14,7 +16,9 @@ import { generarPng, type Imagen } from './exportar';
 import { enviarCorreo } from './correos';
 import { IconoUI } from './marcas';
 import { dentroDelRango, etiqueta, formatearPrecio, reporte, type Estado } from './rifa';
+import { pantalla } from './sesion';
 import { useConfirmar } from './useConfirmar';
+import { useCuentas } from './useCuentas';
 import { usePerfil } from './usePerfil';
 import { useRifa } from './useRifa';
 import { useTema } from './useTema';
@@ -103,6 +107,15 @@ function Cargando({ texto }: { texto: string }) {
 export default function App() {
   const rifa = useRifa();
   const cuenta = usePerfil(rifa.usuarioId);
+  const cuentas = useCuentas(rifa.usuarioId, cuenta.esSuperadmin);
+  const vista = pantalla({
+    recuperando: rifa.recuperando,
+    haySesion: rifa.haySesion,
+    hayNube: rifa.hayNube,
+    hayRifa: !!rifa.rifaActual,
+    perfilCargando: cuenta.cargando,
+    aprobado: cuenta.aprobado,
+  });
   const { confirmar, dialogo: dialogoConfirmar } = useConfirmar();
   useTema(rifa.estado.config.paleta, rifa.estado.config.tipografia);
 
@@ -159,8 +172,16 @@ export default function App() {
     setImagen(null);
   };
 
+  if (vista === 'recuperar') {
+    return (
+      <main className="app">
+        <NuevaClave cambiarClave={rifa.cambiarClave} salir={rifa.salir} />
+      </main>
+    );
+  }
+
   // Visitante con el link: solo el tablero. Sin sesión y sin link: presentación.
-  if (!rifa.haySesion && !rifa.rifaActual) {
+  if (vista === 'onboarding') {
     return (
       <main className="app app--onb">
         {rifa.cargando ? (
@@ -168,6 +189,7 @@ export default function App() {
         ) : (
           <Onboarding
             entrar={rifa.entrar}
+            recuperarClave={rifa.recuperarClave}
             registrarse={async (email, clave, nombre) => {
               const err = await rifa.registrarse(email, clave, nombre);
               // El correo es un aviso, no el trámite: si falla, la cuenta ya quedó creada.
@@ -184,11 +206,17 @@ export default function App() {
   // Se ve como el PNG que se comparte —el tablero no se ensancha, así conserva
   // su proporción a cualquier ancho— y se repinta sola con cada venta, porque
   // el canal de realtime ya está suscrito a esta rifa aunque no haya sesión.
-  if (!rifa.haySesion) {
+  if (vista === 'publico') {
     return (
       <main className="app app--publico">
         {rifa.cargando ? (
           <Cargando texto="Cargando rifa…" />
+        ) : rifa.errorCarga ? (
+          // Sin esto el visitante veía una rifa en blanco, con el título por defecto
+          // y cero números vendidos, como si fuera la rifa de verdad.
+          <p className="dialogo__error" role="alert">
+            No se pudo cargar la rifa: {rifa.errorCarga}. Vuelve a abrir el enlace.
+          </p>
         ) : (
           <>
             {cerrado ? (
@@ -218,7 +246,7 @@ export default function App() {
 
   // Con sesión pero sin saber todavía quién es: ni app ni sala de espera.
   // También cubre el reintento desde EnEspera, que si no parpadeaba al tablero.
-  if (rifa.haySesion && rifa.hayNube && cuenta.cargando) {
+  if (vista === 'perfil-cargando') {
     return (
       <main className="app">
         <Cargando texto="Cargando…" />
@@ -227,7 +255,7 @@ export default function App() {
   }
 
   // Cuenta creada pero todavía sin aprobar por un superadmin.
-  if (rifa.haySesion && rifa.hayNube && !cuenta.cargando && !cuenta.aprobado) {
+  if (vista === 'espera') {
     return (
       <main className="app">
         <EnEspera
@@ -270,24 +298,27 @@ export default function App() {
 
       {mostrarPanel && (
         <div className="app__columna">
+          {rifa.hayNube && cuenta.perfil && (
+            <MiCuenta perfil={cuenta.perfil} guardarNombre={cuenta.guardarNombre} />
+          )}
           {cuenta.esSuperadmin && (
             <>
               <PanelSuperadmin
-                solicitudes={cuenta.solicitudes}
-                decidir={async (id, estado) => {
-                  const err = await cuenta.decidir(id, estado);
-                  if (!err) {
-                    const p = cuenta.solicitudes.find((s) => s.id === id);
-                    if (p && estado !== 'pendiente') {
-                      await enviarCorreo(estado === 'aprobado' ? 'aprobada' : 'rechazada', {
-                        nombre: p.nombre ?? '',
-                        email: p.email,
-                      });
-                    }
-                  }
-                  return err;
+                cuentas={cuentas}
+                confirmar={confirmar}
+                decidir={async (id, estado, pago) => {
+                  const err = await cuentas.actualizarCuenta(id, { estado, ...pago });
+                  if (err) return err;
+                  const p = cuentas.lista.find((c) => c.id === id);
+                  if (!p || estado === 'pendiente') return null;
+                  const fallo = await enviarCorreo(
+                    estado === 'aprobado' ? 'aprobada' : 'rechazada',
+                    { nombre: p.nombre ?? '', email: p.email },
+                  );
+                  // Aviso y no error: la decisión ya quedó guardada. Llamarlo "falló"
+                  // lleva al superadmin a reintentar una operación que sí funcionó.
+                  return fallo ? `Cuenta actualizada, pero el aviso por correo no salió: ${fallo}` : null;
                 }}
-                recargar={cuenta.recargarSolicitudes}
               />
               <DashboardSuper />
             </>
@@ -306,6 +337,9 @@ export default function App() {
             <PanelConfig
               estado={rifa.estado}
               configurar={rifa.configurar}
+              guardado={rifa.guardado}
+              errorGuardado={rifa.errorGuardado}
+              reintentarGuardado={rifa.reintentarGuardado}
               finalizar={rifa.finalizar}
               reabrir={rifa.reabrir}
               vaciarTablero={rifa.vaciarTablero}
@@ -314,6 +348,15 @@ export default function App() {
             />
           )}
         </div>
+      )}
+
+      {/* La edición queda bloqueada mientras esto se vea: el tablero de la pantalla
+          puede no ser el de la base, y guardar encima lo reemplazaría. */}
+      {rifa.errorCarga && (
+        <p className="dialogo__error" role="alert">
+          No se pudo cargar la rifa: {rifa.errorCarga}. Lo que ves puede estar
+          desactualizado; vuelve a intentarlo antes de editar.
+        </p>
       )}
 
       {rifa.cargando ? (

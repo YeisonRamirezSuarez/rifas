@@ -254,9 +254,13 @@ export function ganador(estado: Estado): Ticket | null {
   return n === null ? null : estado.tickets[n] ?? null;
 }
 
-/** Descarta tickets fuera del nuevo total al cambiar la configuración. */
+/** Normaliza la configuración al guardarla. Nunca descarta tickets. */
 export function guardarConfig(estado: Estado, config: Config): Estado {
-  const total = Math.max(1, Math.min(1000, Math.trunc(config.totalNumeros) || 1));
+  const pedido = Math.max(1, Math.min(1000, Math.trunc(config.totalNumeros) || 1));
+  // Achicar el tablero no puede tirar una venta: en la nube la base lo rechaza con
+  // RIF01, y en modo local no hay quien lo rechace. El total se frena en el vendido
+  // más alto; el tablero es base cero, de ahí el `+ 1`.
+  const total = Object.keys(estado.tickets).reduce((t, n) => Math.max(t, Number(n) + 1), pedido);
   // Un ganador fuera del nuevo rango deja de tener sentido: se cae junto con el cierre.
   const ganadorValido =
     config.numeroGanador !== null && dentroDelRango(config.numeroGanador, total)
@@ -269,10 +273,7 @@ export function guardarConfig(estado: Estado, config: Config): Estado {
     numeroGanador: ganadorValido,
     finalizado: config.finalizado && ganadorValido !== null,
   };
-  const tickets = Object.fromEntries(
-    Object.entries(estado.tickets).filter(([n]) => dentroDelRango(Number(n), total)),
-  );
-  return { config: limpia, tickets };
+  return { config: limpia, tickets: estado.tickets };
 }
 
 /** Texto legible para el link público: "Rifa de la Moto" -> "rifa-de-la-moto-4f2a". */

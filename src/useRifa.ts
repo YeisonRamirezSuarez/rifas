@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { nube } from './nube';
+import { veniaDeRecuperacion } from './sesion';
+import { mensajeVenta } from './ventas';
 import {
   CONFIG_INICIAL,
   ESTADO_INICIAL,
@@ -18,9 +20,16 @@ import {
 
 const CLAVE = 'rifa:v2';
 const CLAVE_VIEJA = 'rifa:v1';
+// Un `localStorage` y no `sessionStorage`: la sesión del enlace también vive en
+// localStorage y sobrevive a cerrar la pestaña. Con marca por pestaña, abrir la PWA
+// o volver a abrir la app entraba al tablero con la contraseña vieja todavía puesta.
+const MARCA_RECUPERACION = 'recuperando';
 
 /** Una rifa en la lista del panel. */
 export type ResumenRifa = { id: string; slug: string; titulo: string; premio: string };
+
+/** Qué mostrarle al dueño sobre su último guardado de configuración. */
+export type EstadoGuardado = 'quieto' | 'guardando' | 'guardado' | 'fallo';
 
 type Almacen = { rifas: Record<string, Estado>; actual: string };
 
@@ -81,8 +90,15 @@ async function leerNube(rifaId: string, propia: boolean): Promise<Estado> {
     bd.from('numeros').select('numero, pago, vendido_en').eq('rifa_id', rifaId),
     propia
       ? bd.from('compradores').select('numero, nombre, telefono').eq('rifa_id', rifaId)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
   ]);
+
+  // Sin esto, una lectura fallida devolvía una rifa en blanco —título por defecto,
+  // cien números, cero ventas— y la pantalla la mostraba como si fuera la de verdad.
+  // El daño no era solo visual: el siguiente guardado escribía esa config vacía
+  // encima de la buena.
+  const fallo = fila.error ?? vendidos.error ?? compradores.error;
+  if (fallo) throw new Error(fallo.message);
 
   const datos = new Map(
     ((compradores.data ?? []) as { numero: number; nombre: string; telefono: string }[]).map((c) => [
@@ -124,8 +140,43 @@ export function useRifa() {
   const [admin, setAdmin] = useState<string | null>(null); // id del usuario
   const [cargando, setCargando] = useState(!!nube);
   const [sesionLista, setSesionLista] = useState(!nube);
+  // El evento PASSWORD_RECOVERY llega una vez y no se repite: tras canjear el hash,
+  // supabase-js lo borra de la URL y en el siguiente arranque ya no hay nada que
+  // delate que veníamos de un enlace de recuperación. Sin persistirlo, cerrar y
+  // reabrir la pestaña (o la PWA instalada) entra a la app con la contraseña vieja
+  // todavía puesta. La marca se limpia en `entrar`, `cambiarClave` y `salir` — si
+  // falta en alguno de los tres, o queda encerrado sin salida (falta en `salir`),
+  // o alguien que nunca cambió la clave y luego entra normal queda atrapado en
+  // este formulario (falta en `entrar`).
+  // Sin nube (modo local) no hay ruta de Supabase que dispare esto: sin el `!!nube`
+  // una URL con `type=recovery` abriría NuevaClave y su `cambiarClave` reventaría
+  // en el `nube!` del que no hay nada detrás.
+  const [recuperando, setRecuperando] = useState(
+    () => !!nube && veniaDeRecuperacion(location.hash, localStorage.getItem(MARCA_RECUPERACION)),
+  );
   const configPendiente = useRef(false);
   const temporizador = useRef<ReturnType<typeof setTimeout>>();
+  // El `clearTimeout` desduplica el agendado, no la llegada: con red lenta hay dos
+  // `subirConfig` en vuelo y gana el que responde último, no el más nuevo. Sin este
+  // turno, un guardado viejo que vuelve bien pisa el fallo del nuevo y la pantalla
+  // dice «Guardado.» con el último cambio sin guardar.
+  const secuencia = useRef(0);
+  // La escritura de config que ya salió y todavía no aterriza. `clearTimeout` no la
+  // alcanza: lo único que sirve contra ella es esperarla.
+  const enVuelo = useRef<Promise<string | null> | null>(null);
+  const [guardado, setGuardado] = useState<EstadoGuardado>('quieto');
+  const [errorGuardado, setErrorGuardado] = useState<string | null>(null);
+  // Mientras esté puesto, lo que hay en pantalla no es lo que hay en la base, así que
+  // no se deja editar: guardar sobre datos que no se pudieron leer los reemplaza.
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
+  // Lo último que se intentó guardar, para poder reintentarlo sin que el dueño
+  // tenga que volver a teclear.
+  const ultimaConfig = useRef<{ id: string; config: Config } | null>(null);
+
+  const olvidarRecuperacion = useCallback(() => {
+    localStorage.removeItem(MARCA_RECUPERACION);
+    setRecuperando(false);
+  }, []);
 
   const actual = almacen.actual;
   const estado = almacen.rifas[actual] ?? ESTADO_INICIAL;
@@ -133,6 +184,25 @@ export function useRifa() {
 
   const ponerEstado = useCallback(
     (id: string, e: Estado) => setAlmacen((a) => ({ rifas: { ...a.rifas, [id]: e }, actual: a.actual })),
+    [],
+  );
+
+  /**
+   * Toca solo los tickets, y sobre el estado del momento en vez del que se leyó antes
+   * de la petición. `ponerEstado` reemplaza la rifa entera: si mientras la venta iba y
+   * volvía llegó por realtime un número vendido desde otro dispositivo, ese número
+   * desaparecía del tablero hasta el siguiente evento.
+   */
+  const parchearTickets = useCallback(
+    (id: string, cambio: (t: Record<number, Ticket>) => Record<number, Ticket>) =>
+      setAlmacen((a) => {
+        const previo = a.rifas[id];
+        if (!previo) return a;
+        return {
+          actual: a.actual,
+          rifas: { ...a.rifas, [id]: { ...previo, tickets: cambio(previo.tickets) } },
+        };
+      }),
     [],
   );
 
@@ -144,7 +214,13 @@ export function useRifa() {
       .then(({ data }) => setAdmin(data.session?.user.id ?? null))
       // Aunque falle hay que seguir: quedarse esperando deja la app en blanco.
       .finally(() => setSesionLista(true));
-    const { data } = nube.auth.onAuthStateChange((_e, sesion) => {
+    const { data } = nube.auth.onAuthStateChange((e, sesion) => {
+      // El enlace del correo abre sesión por su cuenta. Sin atrapar el evento, el
+      // usuario entra al tablero sin haber puesto contraseña nueva.
+      if (e === 'PASSWORD_RECOVERY') {
+        localStorage.setItem(MARCA_RECUPERACION, '1');
+        setRecuperando(true);
+      }
       setAdmin(sesion?.user.id ?? null);
       setSesionLista(true);
     });
@@ -158,12 +234,19 @@ export function useRifa() {
     if (admin) setCargando(true);
 
     (async () => {
-      const propias = admin
-        ? ((
-            await nube!.from('rifas').select('id, slug, config').eq('dueno', admin).order('creada_en')
-          ).data ?? [])
-        : [];
+      const consulta = admin
+        ? await nube!.from('rifas').select('id, slug, config').eq('dueno', admin).order('creada_en')
+        : { data: [], error: null };
       if (!vivo) return;
+      // Un fallo acá vaciaba la lista, y la lista vacía es justo la señal de «todavía
+      // no tienes ninguna rifa»: al dueño se le decía que sus rifas no existen.
+      if (consulta.error) {
+        setErrorCarga(consulta.error.message);
+        setCargando(false);
+        return;
+      }
+      setErrorCarga(null);
+      const propias = consulta.data ?? [];
 
       const mapa: Record<string, string> = {};
       const resumenes = (propias as { id: string; slug: string; config: Config }[]).map((r) => {
@@ -204,6 +287,7 @@ export function useRifa() {
       leerNube(actual, propia)
         .then((nuevo) => {
           if (!vivo) return;
+          setErrorCarga(null);
           // No pisar la config que se está escribiendo ahora mismo.
           setAlmacen((a) => {
             const previo = a.rifas[actual];
@@ -219,6 +303,9 @@ export function useRifa() {
             };
           });
         })
+        // Dejar en pantalla lo último que sí se leyó. Antes esta promesa no tenía
+        // salida de error: reventaba sin que nadie se enterara.
+        .catch((e) => vivo && setErrorCarga(mensaje(e)))
         .finally(() => vivo && setCargando(false));
 
     refrescar();
@@ -273,10 +360,19 @@ export function useRifa() {
     [],
   );
 
-  const seleccionarRifa = useCallback((id: string) => {
-    setCargando(!!nube);
-    setAlmacen((a) => ({ rifas: a.rifas, actual: id }));
-  }, []);
+  const seleccionarRifa = useCallback(
+    (id: string) => {
+      // Elegir la rifa que ya está activa no vuelve a disparar el efecto que la
+      // carga —depende de `actual`—, y el único `setCargando(false)` vive dentro
+      // de ese efecto. Sin este corte, encender la espera acá la deja girando
+      // para siempre, y como la espera reemplaza al panel entero, tampoco se
+      // puede editar la rifa. Mismo caso que el guardia de la línea 221.
+      if (id === actual) return;
+      setCargando(!!nube);
+      setAlmacen((a) => ({ rifas: a.rifas, actual: id }));
+    },
+    [actual],
+  );
 
   const eliminarRifa = useCallback(
     async (id: string): Promise<string | null> => {
@@ -306,33 +402,36 @@ export function useRifa() {
           ponerEstado(actual, siguiente);
           return null;
         }
-        const t = siguiente.tickets[lote[0]];
-        // Un solo insert con todas las filas: en Postgres es una sentencia, así que
-        // o entran todos los números o no entra ninguno.
-        const { error } = await nube
-          .from('numeros')
-          .insert(lote.map((numero) => ({ rifa_id: actual, numero, pago })));
-        // 23505 = choque de primary key: alguien más lo vendió primero.
-        if (error) {
-          return error.code === '23505'
-            ? lote.length > 1
-              ? 'Alguno de esos números ya está vendido.'
-              : 'Ese número ya está vendido.'
-            : error.message;
+        // El ticket ya viene normalizado (nombre recortado, teléfono solo dígitos):
+        // eso es lo que debe llegar al RPC, no los valores crudos del formulario.
+        const normalizado = siguiente.tickets[lote[0]];
+        // Una sola llamada: la base inserta el número y su comprador en la misma
+        // transacción. Antes eran dos escrituras con un deshacer manual que solo corría
+        // si el navegador seguía vivo.
+        const { data, error } = await nube.rpc('vender_numeros', {
+          p_rifa: actual,
+          p_numeros: lote,
+          p_nombre: normalizado.comprador,
+          p_telefono: normalizado.telefono,
+          p_pago: pago,
+        });
+        if (error) return mensajeVenta(error.code, error.message, lote.length);
+        // Pintar acá y no esperar el realtime: si ese mensaje se pierde, la venta entró
+        // pero el dueño no la ve y puede intentar venderla otra vez. La hora sí la manda
+        // la base, que es la autoridad sobre cuándo se vendió.
+        const filas = (data ?? []) as { numero: number; vendido_en: string }[];
+        const vendidos: Record<number, Ticket> = {};
+        for (const f of filas) {
+          const t = siguiente.tickets[f.numero];
+          if (t) vendidos[f.numero] = { ...t, vendidoEn: f.vendido_en };
         }
-        const dato = await nube
-          .from('compradores')
-          .insert(lote.map((numero) => ({ rifa_id: actual, numero, nombre: t.comprador, telefono: t.telefono })));
-        if (dato.error) {
-          await nube.from('numeros').delete().eq('rifa_id', actual).in('numero', lote); // deshacer venta a medias
-          return dato.error.message;
-        }
+        parchearTickets(actual, (t) => ({ ...t, ...vendidos }));
         return null;
       } catch (e) {
         return mensaje(e);
       }
     },
-    [estado, actual, ponerEstado],
+    [estado, actual, ponerEstado, parchearTickets],
   );
 
   const marcarPago = useCallback(
@@ -348,18 +447,23 @@ export function useRifa() {
           .update({ pago })
           .eq('rifa_id', actual)
           .eq('numero', numero);
-        return error?.message ?? null;
+        if (error) return error.message;
+        // Pintar acá y no esperar el realtime: si ese mensaje se pierde, el pago quedó
+        // marcado en la base pero el dueño lo sigue viendo pendiente. Mismo motivo que en `vender`.
+        parchearTickets(actual, (t) => (t[numero] ? { ...t, [numero]: { ...t[numero], pago } } : t));
+        return null;
       } catch (e) {
         return mensaje(e);
       }
     },
-    [estado, actual, ponerEstado],
+    [estado, actual, ponerEstado, parchearTickets],
   );
 
   const liberar = useCallback(
     async (numero: number): Promise<string | null> => {
+      const siguiente = liberarPuro(estado, numero);
       if (!nube) {
-        ponerEstado(actual, liberarPuro(estado, numero));
+        ponerEstado(actual, siguiente);
         return null;
       }
       const { error } = await nube
@@ -367,12 +471,52 @@ export function useRifa() {
         .delete()
         .eq('rifa_id', actual)
         .eq('numero', numero); // cascade borra al comprador
-      return error?.message ?? null;
+      if (error) return error.message;
+      // Pintar acá y no esperar el realtime: si ese mensaje se pierde, el número quedó
+      // libre en la base pero el dueño lo sigue viendo vendido. Mismo motivo que en `vender`.
+      parchearTickets(actual, ({ [numero]: _libre, ...resto }) => resto);
+      return null;
     },
-    [estado, actual, ponerEstado],
+    [estado, actual, ponerEstado, parchearTickets],
   );
 
   /* ---------- configuración ---------- */
+
+  /**
+   * Cancela el guardado con retraso que dejó el tecleo. Toda escritura de config que
+   * no venga de `configurar` tiene que llamar a esto primero: si no, el guardado
+   * agendado vuelve con la config de hace 600 ms y borra lo que se acaba de hacer
+   * —cerrar el sorteo, por ejemplo, con su número ganador—. El estado local sigue
+   * mostrando la rifa cerrada, así que nadie se entera hasta recargar.
+   */
+  const cancelarGuardadoPendiente = useCallback(async () => {
+    clearTimeout(temporizador.current);
+    // Sube el turno para que una llamada ya en vuelo no vuelva a tocar el estado.
+    secuencia.current += 1;
+    configPendiente.current = false;
+    // Esa llamada en vuelo ya no va a apagar el cartel: hacerlo acá. Un `'fallo'`
+    // anterior se respeta, que tiene que quedarse hasta que algo se guarde bien.
+    setGuardado((g) => (g === 'guardando' ? 'quieto' : g));
+    // Cancelar no alcanza si la petición ya salió: aterrizaría después de la nuestra
+    // y dejaría la config vieja como la última escrita.
+    await enVuelo.current;
+  }, []);
+
+  /**
+   * Anota el resultado del último intento de guardar config. Lo tienen que llamar
+   * *todos* los caminos que escriben config, no solo el tecleo: el botón de reintentar
+   * reenvía lo anotado acá, y si se queda con una config anterior al cierre del sorteo,
+   * reintentar lo reabre y borra el número ganador.
+   */
+  const anotarGuardado = useCallback((id: string, config: Config, err: string | null) => {
+    ultimaConfig.current = { id, config };
+    // Mientras el guardado siga fallando el realtime no puede pisar la config local:
+    // le borraría al dueño del formulario lo que escribió, dejándole el botón de
+    // reintentar puesto sobre unos cambios que ya no puede ver.
+    configPendiente.current = !!err;
+    setErrorGuardado(err);
+    setGuardado(err ? 'fallo' : 'guardado');
+  }, []);
 
   const configurar = useCallback(
     (config: Config): void => {
@@ -385,35 +529,63 @@ export function useRifa() {
       if (!nube) return;
       // Se escribe mientras se teclea: se agrupa para no mandar una petición por letra.
       configPendiente.current = true;
+      ultimaConfig.current = { id, config: siguiente.config };
       clearTimeout(temporizador.current);
       temporizador.current = setTimeout(async () => {
-        await subirConfig(id, siguiente.config);
-        // El tablero va de 0 a total-1, por eso gte y no gt.
-        await nube!.from('numeros').delete().eq('rifa_id', id).gte('numero', siguiente.config.totalNumeros);
-        configPendiente.current = false;
+        const turno = ++secuencia.current;
+        setGuardado('guardando');
+        enVuelo.current = subirConfig(id, siguiente.config);
+        const err = await enVuelo.current;
+        if (turno !== secuencia.current) return;
+        anotarGuardado(id, siguiente.config, err);
       }, 600);
     },
-    [estado, actual, ponerEstado, subirConfig],
+    [estado, actual, ponerEstado, subirConfig, anotarGuardado],
   );
+
+  const reintentarGuardado = useCallback(async () => {
+    const pendiente = ultimaConfig.current;
+    if (!pendiente) return;
+    const turno = ++secuencia.current;
+    setGuardado('guardando');
+    enVuelo.current = subirConfig(pendiente.id, pendiente.config);
+    const err = await enVuelo.current;
+    if (turno !== secuencia.current) return;
+    anotarGuardado(pendiente.id, pendiente.config, err);
+  }, [subirConfig, anotarGuardado]);
+
+  // El cartel de «Guardado.» se apaga solo. El de fallo no: ese tiene que quedarse
+  // hasta que un guardado salga bien, o el dueño se va con un cambio perdido.
+  useEffect(() => {
+    if (guardado !== 'guardado') return;
+    const t = setTimeout(() => setGuardado('quieto'), 2000);
+    return () => clearTimeout(t);
+  }, [guardado]);
 
   const finalizar = useCallback(
     async (numeroGanador: number): Promise<string | null> => {
       try {
         const siguiente = finalizarPuro(estado, numeroGanador); // valida el rango
+        await cancelarGuardadoPendiente();
         ponerEstado(actual, siguiente);
-        return await subirConfig(actual, siguiente.config);
+        const err = await subirConfig(actual, siguiente.config);
+        anotarGuardado(actual, siguiente.config, err);
+        return err;
       } catch (e) {
         return mensaje(e);
       }
     },
-    [estado, actual, ponerEstado, subirConfig],
+    [estado, actual, ponerEstado, subirConfig, cancelarGuardadoPendiente, anotarGuardado],
   );
 
   const reabrir = useCallback(async (): Promise<string | null> => {
     const siguiente = reabrirPuro(estado);
+    await cancelarGuardadoPendiente();
     ponerEstado(actual, siguiente);
-    return subirConfig(actual, siguiente.config);
-  }, [estado, actual, ponerEstado, subirConfig]);
+    const err = await subirConfig(actual, siguiente.config);
+    anotarGuardado(actual, siguiente.config, err);
+    return err;
+  }, [estado, actual, ponerEstado, subirConfig, cancelarGuardadoPendiente, anotarGuardado]);
 
   /**
    * Vacía el tablero y empieza de nuevo con la misma configuración. Reabre a
@@ -422,6 +594,7 @@ export function useRifa() {
    */
   const vaciarTablero = useCallback(async (): Promise<string | null> => {
     const siguiente = reabrirPuro({ ...estado, tickets: {} });
+    await cancelarGuardadoPendiente();
     if (!nube) {
       ponerEstado(actual, siguiente);
       return null;
@@ -429,21 +602,43 @@ export function useRifa() {
     const { error } = await nube.from('numeros').delete().eq('rifa_id', actual);
     if (error) return error.message;
     ponerEstado(actual, siguiente);
-    return subirConfig(actual, siguiente.config);
-  }, [estado, actual, ponerEstado, subirConfig]);
+    const err = await subirConfig(actual, siguiente.config);
+    anotarGuardado(actual, siguiente.config, err);
+    return err;
+  }, [estado, actual, ponerEstado, subirConfig, cancelarGuardadoPendiente, anotarGuardado]);
 
   /* ---------- cuenta ---------- */
 
   const entrar = useCallback(async (email: string, clave: string): Promise<string | null> => {
     const { error } = await nube!.auth.signInWithPassword({ email, password: clave });
-    if (!error) return null;
+    if (!error) {
+      // Entró con su contraseña de siempre: si había pedido un enlace y no lo usó,
+      // la marca se quedaría puesta y lo atraparía en "Pon tu contraseña nueva"
+      // sin venir de ningún enlace.
+      olvidarRecuperacion();
+      return null;
+    }
     // Solo la clave mala se traduce. Lo demás (proveedor de correo apagado en
     // Supabase, límite de intentos, correo sin confirmar) se muestra tal cual:
     // taparlo todo con "contraseña incorrecta" manda a buscar donde no es.
     return error.code === 'invalid_credentials'
       ? 'Correo o contraseña incorrectos.'
       : `No se pudo entrar: ${error.message}`;
+  }, [olvidarRecuperacion]);
+
+  const recuperarClave = useCallback(async (email: string): Promise<string | null> => {
+    const { error } = await nube!.auth.resetPasswordForEmail(email, {
+      redirectTo: `${location.origin}${location.pathname}`,
+    });
+    return error ? error.message : null;
   }, []);
+
+  const cambiarClave = useCallback(async (nueva: string): Promise<string | null> => {
+    const { error } = await nube!.auth.updateUser({ password: nueva });
+    if (error) return error.message;
+    olvidarRecuperacion();
+    return null;
+  }, [olvidarRecuperacion]);
 
   const registrarse = useCallback(
     async (email: string, clave: string, nombre: string): Promise<string | null> => {
@@ -468,10 +663,13 @@ export function useRifa() {
   );
 
   const salir = useCallback(async () => {
+    // Antes del signOut: si esa llamada lanza, igual queda una salida y no atrapado
+    // en "Pon tu contraseña nueva" sin sesión con la que reenviarla.
+    olvidarRecuperacion();
     await nube!.auth.signOut();
     setLista([]);
     setAlmacen({ rifas: {}, actual: '' });
-  }, []);
+  }, [olvidarRecuperacion]);
 
   const linkPublico = useCallback(
     (id: string): string => `${location.origin}${location.pathname}?r=${slugs[id] ?? ''}`,
@@ -481,13 +679,17 @@ export function useRifa() {
   return {
     estado,
     cargando: cargando || !sesionLista,
-    puedeEditar: !nube || (!!admin && propia),
+    // Con la carga fallada lo de la pantalla no es lo que hay en la base: editar
+    // encima de eso guarda una rifa vacía sobre la buena.
+    puedeEditar: !nube || (!!admin && propia && !errorCarga),
     hayNube: !!nube,
     haySesion: !nube || !!admin,
     usuarioId: admin,
     rifas: nube ? lista : Object.entries(almacen.rifas).map(([id, e]) => resumen(id, '', e)),
     rifaActual: actual,
-    sinRifas: !!nube && !!admin && lista.length === 0,
+    errorCarga,
+    // Con la lista sin traer, «no tienes ninguna rifa» es mentira, no un dato.
+    sinRifas: !!nube && !!admin && lista.length === 0 && !errorCarga,
     linkPublico,
     crearRifa,
     seleccionarRifa,
@@ -496,11 +698,17 @@ export function useRifa() {
     marcarPago,
     liberar,
     configurar,
+    guardado,
+    errorGuardado,
+    reintentarGuardado,
     finalizar,
     reabrir,
     vaciarTablero,
     entrar,
+    recuperarClave,
     registrarse,
     salir,
+    recuperando,
+    cambiarClave,
   };
 }

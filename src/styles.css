@@ -386,6 +386,13 @@ dd,
   gap: 0.6rem;
 }
 
+/* La pantalla de clave nueva reusa .espera pero es un formulario: los campos
+   necesitan ocupar el ancho, que .espera centra todo. */
+.espera label {
+  width: 100%;
+  text-align: left;
+}
+
 .espera__precio {
   margin: 0.5rem 0 0;
   font-family: var(--ui-serif);
@@ -447,6 +454,55 @@ dd,
 .cuentas__acciones button {
   flex: 1;
   font-size: 0.75rem;
+}
+
+.cuentas__buscar {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.cuentas__rol {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.cuentas__rol select {
+  flex: 1;
+  font-size: 0.75rem;
+}
+
+/* Aviso de que llegaron cambios mientras se paginaba o buscaba: recargar solo
+   movería la lista bajo el dedo. */
+.cuentas__novedad {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  border-color: var(--acento);
+}
+
+.cuentas__pago {
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+
+/* Aprobar cobrado y aprobar de cortesía tienen que distinguirse de un vistazo, o
+   el dato no sirve para nada. */
+.cuentas__pago--falta {
+  color: var(--peligro);
+  opacity: 1;
+}
+
+.cuentas__cobro {
+  display: grid;
+  gap: 0.4rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--borde);
+  font-size: 0.72rem;
 }
 
 .dialogo--confirmar {
@@ -1251,6 +1307,16 @@ dd,
   margin: 0;
   font-size: 0.85rem;
   color: var(--tinta-suave);
+}
+
+.panel__guardado {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--tinta-suave);
+}
+
+.panel__guardado--mal {
+  color: var(--peligro);
 }
 
 .dialogo__pagos {
