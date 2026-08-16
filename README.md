@@ -133,9 +133,12 @@ Sin variables de entorno la app corre en **modo local**: las rifas viven en
 npx supabase db push --db-url "postgresql://postgres.<REF>:<PASSWORD>@aws-0-<REGION>.pooler.supabase.com:5432/postgres" --yes
 ```
 
-   O pegar `supabase.sql` y los archivos de `supabase/migrations/` en el **SQL Editor**.
+   O pegar los archivos de `supabase/migrations/` en el **SQL Editor**, en orden de nombre.
 
-3. En **Authentication → Providers → Email**, desactivar *Confirm email*: la
+3. Sembrar el primer superadmin: copiar `supabase/semilla.example.sql`, cambiar el
+   correo por el tuyo y correrlo una vez. Sin esto no hay quien apruebe cuentas.
+
+4. En **Authentication → Providers → Email**, desactivar *Confirm email*: la
    confirmación la maneja el flujo de aprobación, no el correo de Supabase.
 
 ### Variables de entorno

@@ -1,11 +1,14 @@
 import { useCallback, useState } from 'react';
 import { IconoUI, type Simbolo } from '../marcas';
+import { LARGO_MAXIMO } from '../cuentas';
 import { ESTADO_INICIAL, type Estado, type Pago } from '../rifa';
+import { CampoClave } from './CampoClave';
 import { Poster } from './Poster';
 
 type Props = {
   entrar: (email: string, clave: string) => Promise<string | null>;
   registrarse: (email: string, clave: string, nombre: string) => Promise<string | null>;
+  recuperarClave: (email: string) => Promise<string | null>;
 };
 
 const VENTAJAS: { icono: Simbolo; titulo: string; texto: string }[] = [
@@ -43,16 +46,17 @@ const MUESTRA: Estado = {
   ),
 };
 
-export function Onboarding({ entrar, registrarse }: Props) {
-  const [modo, setModo] = useState<'entrar' | 'crear'>('entrar');
+export function Onboarding({ entrar, registrarse, recuperarClave }: Props) {
+  const [modo, setModo] = useState<'entrar' | 'crear' | 'recuperar'>('entrar');
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [clave, setClave] = useState('');
-  const [verClave, setVerClave] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [listo, setListo] = useState(false);
 
   const crear = modo === 'crear';
+  const recuperar = modo === 'recuperar';
 
   // inert por ref: la muestra tiene cien botones dentro y sin esto el tabulador
   // se los recorre todos antes de llegar al formulario.
@@ -101,21 +105,38 @@ export function Onboarding({ entrar, registrarse }: Props) {
           onSubmit={async (ev) => {
             ev.preventDefault();
             setEnviando(true);
-            setAviso(crear ? await registrarse(email, clave, nombre) : await entrar(email, clave));
+            if (recuperar) {
+              const err = await recuperarClave(email);
+              setAviso(err);
+              // Se confirma el envío pase lo que pase con el correo: decir "ese
+              // correo no existe" es delatar quién tiene cuenta aquí.
+              setListo(!err);
+            } else {
+              setAviso(crear ? await registrarse(email, clave, nombre) : await entrar(email, clave));
+            }
             setEnviando(false);
           }}
         >
-          <h2 className="panel__titulo">{crear ? 'Crear mi cuenta' : 'Entrar'}</h2>
+          <h2 className="panel__titulo">
+            {recuperar ? 'Recuperar contraseña' : crear ? 'Crear mi cuenta' : 'Entrar'}
+          </h2>
           <p className="panel__nota">
-            {crear
-              ? 'Revisamos cada solicitud a mano. Te avisamos apenas quede activa.'
-              : 'Para ver un tablero no hace falta cuenta: basta el link que te compartieron.'}
+            {recuperar
+              ? 'Te mandamos un enlace para poner una contraseña nueva.'
+              : crear
+                ? 'Revisamos cada solicitud a mano. Te avisamos apenas quede activa.'
+                : 'Para ver un tablero no hace falta cuenta: basta el link que te compartieron.'}
           </p>
 
           {crear && (
             <label>
               Tu nombre
-              <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+              <input
+                value={nombre}
+                maxLength={LARGO_MAXIMO}
+                onChange={(e) => setNombre(e.target.value)}
+                required
+              />
             </label>
           )}
           <label>
@@ -128,33 +149,26 @@ export function Onboarding({ entrar, registrarse }: Props) {
               required
             />
           </label>
-          <label>
-            Contraseña
-            <span className="campo-clave">
-              <input
-                type={verClave ? 'text' : 'password'}
-                autoComplete={crear ? 'new-password' : 'current-password'}
-                value={clave}
-                onChange={(e) => setClave(e.target.value)}
-                required
-                minLength={6}
-                aria-describedby={crear ? 'pista-clave' : undefined}
-              />
-              <button
-                type="button"
-                className="campo-clave__ojo"
-                onClick={() => setVerClave((v) => !v)}
-                aria-label={verClave ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                aria-pressed={verClave}
-              >
-                <IconoUI id={verClave ? 'ojoTapado' : 'ojo'} />
-              </button>
-            </span>
-          </label>
+          {!recuperar && (
+            <CampoClave
+              etiqueta="Contraseña"
+              valor={clave}
+              onCambio={setClave}
+              autoComplete={crear ? 'new-password' : 'current-password'}
+              describedBy={crear ? 'pista-clave' : undefined}
+            />
+          )}
           {/* La regla se dice antes de escribir, no después de que el envío falle. */}
           {crear && (
             <p className="panel__nota" id="pista-clave">
               Mínimo 6 caracteres.
+            </p>
+          )}
+
+          {listo && (
+            <p className="panel__nota" role="status">
+              Si existe una cuenta con ese correo, ya va en camino el enlace. Revisa también
+              la carpeta de spam.
             </p>
           )}
 
@@ -165,18 +179,38 @@ export function Onboarding({ entrar, registrarse }: Props) {
           )}
 
           <button type="submit" className="boton--primario onb__cta" disabled={enviando}>
-            {enviando ? 'Un momento…' : crear ? 'Solicitar mi acceso' : 'Entrar'}
+            {enviando
+              ? 'Un momento…'
+              : recuperar
+                ? 'Mandarme el enlace'
+                : crear
+                  ? 'Solicitar mi acceso'
+                  : 'Entrar'}
           </button>
           <button
             type="button"
             className="onb__cambio"
             onClick={() => {
-              setModo(crear ? 'entrar' : 'crear');
+              setModo(crear || recuperar ? 'entrar' : 'crear');
               setAviso(null);
+              setListo(false);
             }}
           >
-            {crear ? 'Ya tengo cuenta' : 'Quiero una cuenta'}
+            {crear || recuperar ? 'Ya tengo cuenta' : 'Quiero una cuenta'}
           </button>
+          {!crear && !recuperar && (
+            <button
+              type="button"
+              className="onb__cambio"
+              onClick={() => {
+                setModo('recuperar');
+                setAviso(null);
+                setListo(false);
+              }}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          )}
         </form>
 
         {/* La prueba: el póster de verdad, no una captura ni una promesa escrita. */}

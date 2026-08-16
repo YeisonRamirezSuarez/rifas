@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { nube } from './nube';
 
-export type Rol = 'superadmin' | 'admin' | 'cliente';
+export type Rol = 'superadmin' | 'admin';
 export type EstadoCuenta = 'pendiente' | 'aprobado' | 'rechazado';
 
 export type Perfil = {
@@ -11,28 +11,19 @@ export type Perfil = {
   rol: Rol;
   estado: EstadoCuenta;
   creado_en: string;
+  pagado_en: string | null;
+  pago_nota: string | null;
 };
 
 /**
- * Perfil de la cuenta activa y, si es superadmin, las solicitudes por revisar.
+ * Perfil de la cuenta activa: rol y estado de aprobación.
  * Sin nube no hay cuentas: se trabaja como admin aprobado.
  */
 export function usePerfil(usuarioId: string | null) {
   const [perfil, setPerfil] = useState<Perfil | null>(null);
-  const [solicitudes, setSolicitudes] = useState<Perfil[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [resuelto, setResuelto] = useState<string | null>(null);
   const cargando = !!nube && !!usuarioId && resuelto !== usuarioId;
-
-  const cargarSolicitudes = useCallback(async () => {
-    if (!nube || !usuarioId) return;
-    const { data } = await nube
-      .from('perfiles')
-      .select('*')
-      .neq('id', usuarioId)
-      .order('creado_en', { ascending: false });
-    setSolicitudes((data ?? []) as Perfil[]);
-  }, [usuarioId]);
 
   // Descarta la respuesta de una consulta que ya quedó vieja: al cambiar de
   // cuenta la anterior puede llegar después y pisar el perfil bueno.
@@ -65,15 +56,13 @@ export function usePerfil(usuarioId: string | null) {
             : 'No encontramos el perfil de esta cuenta. Escríbenos para activarla.',
       );
       setResuelto(usuarioId);
-      if (mio?.rol === 'superadmin') cargarSolicitudes();
     },
-    [usuarioId, cargarSolicitudes],
+    [usuarioId],
   );
 
   useEffect(() => {
     if (!nube || !usuarioId) {
       setPerfil(null);
-      setSolicitudes([]);
       setError(null);
       // Sin esto, volver a entrar con la misma cuenta daba el perfil por
       // resuelto antes de pedirlo y asomaba la pantalla de error.
@@ -106,32 +95,26 @@ export function usePerfil(usuarioId: string | null) {
     };
   }, [usuarioId, cargarPerfil]);
 
-  const decidir = useCallback(
-    async (id: string, estado: EstadoCuenta): Promise<string | null> => {
-      const { error: fallo } = await nube!
-        .from('perfiles')
-        .update({
-          estado,
-          aprobado_en: estado === 'aprobado' ? new Date().toISOString() : null,
-        })
-        .eq('id', id);
+  /** Guarda el nombre propio vía RPC: el trim y la validación viven en la base. */
+  const guardarNombre = useCallback(
+    async (nuevo: string): Promise<string | null> => {
+      if (!nube) return null;
+      const { error: fallo } = await nube.rpc('actualizar_mi_nombre', { nuevo });
       if (fallo) return fallo.message;
-      await cargarSolicitudes();
+      await cargarPerfil(true);
       return null;
     },
-    [cargarSolicitudes],
+    [cargarPerfil],
   );
 
   return {
     perfil,
     cargando,
     error,
-    solicitudes,
     esSuperadmin: perfil?.rol === 'superadmin',
     /** Sin nube no hay aprobación: se usa la app directamente. */
     aprobado: !nube || perfil?.estado === 'aprobado',
-    decidir,
     recargarPerfil: cargarPerfil,
-    recargarSolicitudes: cargarSolicitudes,
+    guardarNombre,
   };
 }

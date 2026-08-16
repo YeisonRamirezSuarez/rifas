@@ -29,12 +29,19 @@ const fecha = (iso: string | null) =>
 export function DashboardSuper() {
   const [filas, setFilas] = useState<Fila[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [orden, setOrden] = useState<'ventas' | 'fecha'>('ventas');
 
   const cargar = async () => {
     setCargando(true);
-    const { data } = await nube!.from('panel_superadmin').select('*');
-    setFilas((data ?? []) as Fila[]);
+    const { data, error: fallo } = await nube!.from('panel_superadmin').select('*');
+    // Un fallo dejaba la tabla vacía, y vacía este panel dice «cero usuarios, cero
+    // boletas, cero cobrado»: la lectura que menos conviene equivocar.
+    if (fallo) setError(fallo.message);
+    else {
+      setError(null);
+      setFilas((data ?? []) as Fila[]);
+    }
     setCargando(false);
   };
 
@@ -62,33 +69,46 @@ export function DashboardSuper() {
         </button>
       </div>
 
-      <dl className="panel__resumen">
-        <div>
-          <dt>Usuarios</dt>
-          <dd>{usuarios}</dd>
-        </div>
-        <div>
-          <dt>Rifas</dt>
-          <dd>{filas.length}</dd>
-        </div>
-        <div>
-          <dt>Boletas</dt>
-          <dd>{totalVendidos}</dd>
-        </div>
-      </dl>
+      {error && (
+        <p className="dialogo__error" role="alert">
+          No se pudieron traer las cifras: {error}.
+          {filas.length > 0 && ' Las de abajo son las de la última carga que sí funcionó.'}
+        </p>
+      )}
 
-      <table className="panel__caja">
-        <tbody>
-          <tr className="panel__caja-total">
-            <th scope="row">Cobrado en total</th>
-            <td>{formatearPrecio(totalCobrado, 'COP')}</td>
-          </tr>
-          <tr>
-            <th scope="row">Por cobrar</th>
-            <td>{formatearPrecio(porCobrar, 'COP')}</td>
-          </tr>
-        </tbody>
-      </table>
+      {/* Sin filas y con error, las cifras serían todas cero: justo la lectura falsa que
+          este panel no puede dar. Mejor no mostrar nada que mostrar un negocio vacío. */}
+      {(!error || filas.length > 0) && (
+        <>
+          <dl className="panel__resumen">
+            <div>
+              <dt>Usuarios</dt>
+              <dd>{usuarios}</dd>
+            </div>
+            <div>
+              <dt>Rifas</dt>
+              <dd>{filas.length}</dd>
+            </div>
+            <div>
+              <dt>Boletas</dt>
+              <dd>{totalVendidos}</dd>
+            </div>
+          </dl>
+
+          <table className="panel__caja">
+            <tbody>
+              <tr className="panel__caja-total">
+                <th scope="row">Cobrado en total</th>
+                <td>{formatearPrecio(totalCobrado, 'COP')}</td>
+              </tr>
+              <tr>
+                <th scope="row">Por cobrar</th>
+                <td>{formatearPrecio(porCobrar, 'COP')}</td>
+              </tr>
+            </tbody>
+          </table>
+        </>
+      )}
 
       <div className="panel__nav" role="tablist" aria-label="Orden">
         {(['ventas', 'fecha'] as const).map((o) => (

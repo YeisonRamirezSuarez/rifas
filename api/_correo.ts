@@ -14,14 +14,6 @@ export type Peticion = {
   email?: string;
 };
 
-// Brevo solo entrega desde un remitente verificado en la cuenta. Con un dominio
-// sin verificar acepta la llamada (201) pero el correo cae en spam o se pierde.
-const REMITENTE = {
-  name: 'Rifas',
-  email: process.env.BREVO_REMITENTE || 'yeisonfabianramirezsuarez@gmail.com',
-};
-const SUPERADMIN = process.env.SUPERADMIN_EMAIL || 'yeisonfabianramirezsuarez@gmail.com';
-
 const marco = (titulo: string, cuerpo: string, pie = '') => `
 <div style="margin:0;padding:32px 16px;background:#4a2123;font-family:'Helvetica Neue',Arial,sans-serif">
   <div style="max-width:520px;margin:0 auto;background:#63302f;border-radius:14px;overflow:hidden">
@@ -113,11 +105,18 @@ function plantilla(tipo: TipoCorreo, nombre: string, email: string, sitio: strin
   };
 }
 
-async function enviar(apiKey: string, para: string, asunto: string, html: string) {
+// Brevo solo entrega desde un remitente verificado en la cuenta. Con un dominio
+// sin verificar acepta la llamada (201) pero el correo cae en spam o se pierde.
+async function enviar(apiKey: string, remitente: string, para: string, asunto: string, html: string) {
   const r = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'api-key': apiKey, 'Content-Type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ sender: REMITENTE, to: [{ email: para }], subject: asunto, htmlContent: html }),
+    body: JSON.stringify({
+      sender: { name: 'Rifas', email: remitente },
+      to: [{ email: para }],
+      subject: asunto,
+      htmlContent: html,
+    }),
   });
   if (!r.ok) throw new Error(`Brevo ${r.status}: ${(await r.text()).slice(0, 200)}`);
 }
@@ -156,6 +155,15 @@ export async function manejarCorreo(
 ): Promise<{ estado: number; datos: unknown }> {
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) return { estado: 500, datos: { error: 'Falta BREVO_API_KEY en el servidor.' } };
+  // Sin estas dos, los avisos salen desde —o van a— el buzón de quien escribió el
+  // código. Fallar ruidoso: un correo perdido no se nota hasta que alguien reclama.
+  const remitente = process.env.BREVO_REMITENTE;
+  const superadmin = process.env.SUPERADMIN_EMAIL;
+  if (!remitente || !superadmin)
+    return {
+      estado: 500,
+      datos: { error: 'Falta BREVO_REMITENTE o SUPERADMIN_EMAIL en el servidor.' },
+    };
   if (!token) return { estado: 401, datos: { error: 'Sin sesión.' } };
 
   const usuario = await usuarioDelToken(token);
@@ -179,8 +187,9 @@ export async function manejarCorreo(
   );
 
   try {
-    await enviar(apiKey, destino, paraUsuario.asunto, paraUsuario.html);
-    if (paraSuperadmin) await enviar(apiKey, SUPERADMIN, paraSuperadmin.asunto, paraSuperadmin.html);
+    await enviar(apiKey, remitente, destino, paraUsuario.asunto, paraUsuario.html);
+    if (paraSuperadmin)
+      await enviar(apiKey, remitente, superadmin, paraSuperadmin.asunto, paraSuperadmin.html);
     return { estado: 200, datos: { ok: true } };
   } catch (e) {
     return { estado: 502, datos: { error: e instanceof Error ? e.message : 'Error enviando.' } };
