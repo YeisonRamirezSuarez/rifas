@@ -3,15 +3,15 @@ import { estadoNumero, etiqueta, formatearPrecio, ventas, type Estado } from '..
 
 type Props = {
   estado: Estado;
-  /** Abre la ficha del número: ahí se cobra, se avisa por WhatsApp o se libera. */
-  onNumero: (numero: number) => void;
+  /** Abre la ficha de esos números: ahí se cobra, se avisa por WhatsApp o se libera. */
+  onNumeros: (numeros: number[]) => void;
 };
 
 /**
  * Quién compró qué. Es la vista para cobrar: se busca a la persona por nombre y
  * se toca su número, en vez de rastrearlo en la cuadrícula.
  */
-export function ListaVentas({ estado, onNumero }: Props) {
+export function ListaVentas({ estado, onNumeros }: Props) {
   const [busca, setBusca] = useState('');
   const { totalNumeros, precio, moneda } = estado.config;
   const q = busca.trim().toLowerCase();
@@ -62,12 +62,24 @@ export function ListaVentas({ estado, onNumero }: Props) {
               {v.pendientes ? `Debe ${formatearPrecio(v.pendientes * precio, moneda)}` : 'Al día'}
             </span>
             <div className="ventas__nums">
+              {/* Todos juntos: un solo mensaje de WhatsApp y un solo toque para
+                  cobrarle los cinco números a la misma persona. */}
+              {v.numeros.length > 1 && (
+                <button
+                  type="button"
+                  className="ventas__num ventas__todos"
+                  onClick={() => onNumeros(v.numeros)}
+                  title={`Cobrar o avisar los ${v.numeros.length} números de ${v.nombre} en un solo mensaje`}
+                >
+                  Los {v.numeros.length} juntos
+                </button>
+              )}
               {v.numeros.map((n) => (
                 <button
                   key={n}
                   type="button"
                   className={`ventas__num ventas__num--${estadoNumero(estado, n)}`}
-                  onClick={() => onNumero(n)}
+                  onClick={() => onNumeros([n])}
                   title={`Número ${etiqueta(n, totalNumeros)}`}
                 >
                   {etiqueta(n, totalNumeros)}

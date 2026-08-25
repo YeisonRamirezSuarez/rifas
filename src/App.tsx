@@ -344,7 +344,7 @@ export default function App() {
               reabrir={rifa.reabrir}
               vaciarTablero={rifa.vaciarTablero}
               confirmar={confirmar}
-              onNumero={(n) => setVenta([n])}
+              onNumeros={(ns) => setVenta(ns)}
             />
           )}
         </div>

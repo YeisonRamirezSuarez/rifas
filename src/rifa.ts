@@ -303,26 +303,42 @@ export function rellenar(plantilla: string, valores: Record<string, string>): st
   return plantilla.replace(/\{(\w+)\}/g, (original, clave: string) => valores[clave] ?? original);
 }
 
-/** Mensaje de control que el organizador le manda al comprador. */
-export function mensajeComprador(estado: Estado, numero: number): string {
-  const c = estado.config;
-  const t = estado.tickets[numero];
-  if (!t) throw new Error('Ese número no está vendido.');
+/** "05", o "05, 12 y 33" cuando la persona lleva varios números en el mismo mensaje. */
+function listaNumeros(numeros: number[], total: number): string {
+  const e = numeros.map((n) => etiqueta(n, total));
+  if (e.length < 2) return e[0] ?? '';
+  return `${e.slice(0, -1).join(', ')} y ${e[e.length - 1]}`;
+}
 
+/**
+ * Mensaje de control que el organizador le manda al comprador. Con una lista de
+ * números sale uno solo por toda la compra, no uno por número.
+ */
+export function mensajeComprador(estado: Estado, numero: number | number[]): string {
+  const c = estado.config;
+  const nums = Array.isArray(numero) ? numero : [numero];
+  const tickets = nums.map((n) => estado.tickets[n]);
+  if (!nums.length || tickets.some((t) => !t)) throw new Error('Ese número no está vendido.');
+  const t = tickets[0]!;
+
+  // Si queda algo por pagar, el mensaje es de cobro aunque otros números ya estén pagados.
+  const pendientes = tickets.filter((x) => x!.pago === 'pendiente');
+  const apartado = pendientes.length > 0;
   // Config guardada antes de existir las plantillas: no tumbar el panel por eso.
-  const plantilla =
-    t.pago === 'pendiente'
-      ? c.plantillaApartado || PLANTILLA_APARTADO
-      : c.plantillaPagado || PLANTILLA_PAGADO;
+  const plantilla = apartado
+    ? c.plantillaApartado || PLANTILLA_APARTADO
+    : c.plantillaPagado || PLANTILLA_PAGADO;
+  // {precio} es la plata de la que habla el mensaje: lo que debe, o lo que pagó.
+  const cuantos = apartado ? pendientes.length : tickets.length;
   return rellenar(plantilla, {
     nombre: t.comprador.trim().split(/\s+/)[0] || '',
-    numero: etiqueta(numero, c.totalNumeros),
+    numero: listaNumeros(nums, c.totalNumeros),
     titulo: c.titulo,
     premio: c.premio,
     fecha: formatearFecha(c.fechaJuego),
     loteria: c.loteria,
-    precio: formatearPrecio(c.precio, c.moneda),
-    metodo: t.pago,
+    precio: formatearPrecio(c.precio * cuantos, c.moneda),
+    metodo: (tickets.find((x) => x!.pago !== 'pendiente') ?? t)!.pago,
     contacto: `${c.etiquetaContacto}: ${c.contacto}`,
   }).trim();
 }
@@ -345,8 +361,9 @@ export function ejemploMensaje(config: Config, pago: Pago): string {
 }
 
 /** Abre WhatsApp con el mensaje listo hacia el teléfono del comprador. */
-export function linkComprador(estado: Estado, numero: number): string {
-  const t = estado.tickets[numero];
+export function linkComprador(estado: Estado, numero: number | number[]): string {
+  const primero = Array.isArray(numero) ? numero[0] : numero;
+  const t = estado.tickets[primero];
   return `https://wa.me/${conIndicativo(t?.telefono ?? '')}?text=${encodeURIComponent(
     mensajeComprador(estado, numero),
   )}`;

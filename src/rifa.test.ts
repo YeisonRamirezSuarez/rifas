@@ -137,6 +137,31 @@ describe('rifa', () => {
     expect(() => mensajeComprador(s, 24)).toThrow();
   });
 
+  it('junta los números de la persona en un solo mensaje y cobra lo que falta', () => {
+    let s = vender(ESTADO_INICIAL, 5, 'Leidy del Puesto', '3162123456');
+    s = vender(s, 12, 'Leidy del Puesto', '3162123456');
+    s = vender(s, 33, 'Leidy del Puesto', '3162123456');
+
+    const todos = mensajeComprador(s, [5, 12, 33]);
+    expect(todos).toContain('el 05, 12 y 33');
+    expect(todos).toContain('APARTADO');
+    expect(todos).toContain(formatearPrecio(15000, 'COP')); // los tres pendientes
+    expect(linkComprador(s, [5, 12, 33])).toContain('wa.me/573162123456');
+
+    // Con uno pagado sigue siendo mensaje de cobro, pero solo por lo que debe.
+    const parcial = marcarPago(s, 5, 'efectivo');
+    expect(mensajeComprador(parcial, [5, 12, 33])).toContain(formatearPrecio(10000, 'COP'));
+
+    // Todo pagado: mensaje de confirmación por el total.
+    let pagado = marcarPago(parcial, 12, 'efectivo');
+    pagado = marcarPago(pagado, 33, 'efectivo');
+    const gracias = mensajeComprador(pagado, [5, 12, 33]);
+    expect(gracias).toContain('CONFIRMADO');
+    expect(gracias).toContain(formatearPrecio(15000, 'COP'));
+
+    expect(() => mensajeComprador(s, [5, 99])).toThrow();
+  });
+
   it('usa la plantilla editada y deja intactas las variables que no existen', () => {
     const base = vender(ESTADO_INICIAL, 8, 'Ana Ruiz', '3001112233');
     const s = {

@@ -28,7 +28,7 @@ type Props = {
   reabrir: () => Promise<string | null>;
   vaciarTablero: () => Promise<string | null>;
   /** Abre la ficha de un número desde la lista de compradores. */
-  onNumero: (numero: number) => void;
+  onNumeros: (numeros: number[]) => void;
   confirmar: (titulo: string, o?: { texto?: string; aceptar?: string; peligro?: boolean }) => Promise<boolean>;
 };
 
@@ -127,7 +127,7 @@ export function PanelConfig({
   reabrir,
   vaciarTablero,
   confirmar,
-  onNumero,
+  onNumeros,
 }: Props) {
   const c = estado.config;
   const r = reporte(estado);
@@ -452,7 +452,7 @@ export function PanelConfig({
           id={`panel-${pestana}`}
           aria-labelledby={`tab-${pestana}`}
         >
-          <ListaVentas estado={estado} onNumero={onNumero} />
+          <ListaVentas estado={estado} onNumeros={onNumeros} />
         </section>
       )}
 

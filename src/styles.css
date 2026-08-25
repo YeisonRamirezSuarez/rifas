@@ -1676,6 +1676,19 @@ button:focus-visible,
   font-weight: 600;
 }
 
+/* Los números de la persona en un solo toque: no es un número, no lleva ancho de casilla. */
+.ventas__todos {
+  min-width: 0;
+  padding: 0.28rem 0.55rem;
+  border-color: var(--acento);
+  color: var(--acento);
+}
+
+.ventas__todos:hover {
+  background: var(--acento);
+  color: var(--tinta-boton);
+}
+
 /* Apartado: contorno ocre punteado, igual que la casilla del tablero. */
 .ventas__num--apartado {
   border-style: dashed;

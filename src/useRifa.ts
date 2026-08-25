@@ -434,10 +434,13 @@ export function useRifa() {
     [estado, actual, ponerEstado, parchearTickets],
   );
 
+  // Acepta varios números para cobrarle de una a quien lleva media rifa: uno por
+  // uno recalculaba el estado sobre la copia vieja y solo el último quedaba puesto.
   const marcarPago = useCallback(
-    async (numero: number, pago: Pago): Promise<string | null> => {
+    async (numero: number | number[], pago: Pago): Promise<string | null> => {
+      const numeros = Array.isArray(numero) ? numero : [numero];
       try {
-        const siguiente = marcarPagoPuro(estado, numero, pago);
+        const siguiente = numeros.reduce((e, n) => marcarPagoPuro(e, n, pago), estado);
         if (!nube) {
           ponerEstado(actual, siguiente);
           return null;
@@ -446,11 +449,13 @@ export function useRifa() {
           .from('numeros')
           .update({ pago })
           .eq('rifa_id', actual)
-          .eq('numero', numero);
+          .in('numero', numeros);
         if (error) return error.message;
         // Pintar acá y no esperar el realtime: si ese mensaje se pierde, el pago quedó
         // marcado en la base pero el dueño lo sigue viendo pendiente. Mismo motivo que en `vender`.
-        parchearTickets(actual, (t) => (t[numero] ? { ...t, [numero]: { ...t[numero], pago } } : t));
+        parchearTickets(actual, (t) =>
+          numeros.reduce((acc, n) => (acc[n] ? { ...acc, [n]: { ...acc[n], pago } } : acc), t),
+        );
         return null;
       } catch (e) {
         return mensaje(e);
@@ -460,8 +465,9 @@ export function useRifa() {
   );
 
   const liberar = useCallback(
-    async (numero: number): Promise<string | null> => {
-      const siguiente = liberarPuro(estado, numero);
+    async (numero: number | number[]): Promise<string | null> => {
+      const numeros = Array.isArray(numero) ? numero : [numero];
+      const siguiente = numeros.reduce((e, n) => liberarPuro(e, n), estado);
       if (!nube) {
         ponerEstado(actual, siguiente);
         return null;
@@ -470,11 +476,15 @@ export function useRifa() {
         .from('numeros')
         .delete()
         .eq('rifa_id', actual)
-        .eq('numero', numero); // cascade borra al comprador
+        .in('numero', numeros); // cascade borra al comprador
       if (error) return error.message;
       // Pintar acá y no esperar el realtime: si ese mensaje se pierde, el número quedó
       // libre en la base pero el dueño lo sigue viendo vendido. Mismo motivo que en `vender`.
-      parchearTickets(actual, ({ [numero]: _libre, ...resto }) => resto);
+      parchearTickets(actual, (t) => {
+        const resto = { ...t };
+        for (const n of numeros) delete resto[n];
+        return resto;
+      });
       return null;
     },
     [estado, actual, ponerEstado, parchearTickets],

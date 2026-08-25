@@ -19,8 +19,8 @@ type Props = {
   puedeEditar: boolean;
   onCerrar: () => void;
   vender: (numeros: number[], comprador: string, telefono: string, pago: Pago) => Promise<string | null>;
-  marcarPago: (numero: number, pago: Pago) => Promise<string | null>;
-  liberar: (numero: number) => Promise<string | null>;
+  marcarPago: (numeros: number[], pago: Pago) => Promise<string | null>;
+  liberar: (numeros: number[]) => Promise<string | null>;
   confirmar: (titulo: string, o?: { texto?: string; aceptar?: string; peligro?: boolean }) => Promise<boolean>;
 };
 
@@ -71,6 +71,9 @@ export function DialogoNumero({
 
   const ticket = numero !== null ? estado.tickets[numero] : undefined;
   const total = estado.config.totalNumeros;
+  // Lo ya vendido del lote: cobrar, avisar y liberar actúan sobre todo junto,
+  // que es como se atiende a quien compró cinco números de una.
+  const vendidos = numeros.filter((n) => estado.tickets[n]);
 
   // Quien ya compró en esta rifa. Se busca escribiendo el nombre en el mismo
   // campo de la venta: con cincuenta clientes una lista completa no se navega.
@@ -129,9 +132,11 @@ export function DialogoNumero({
                     <button
                       key={p}
                       type="button"
-                      aria-pressed={ticket.pago === p}
-                      className={ticket.pago === p ? 'boton--primario' : ''}
-                      onClick={async () => setError(await marcarPago(numero, p))}
+                      aria-pressed={vendidos.every((n) => estado.tickets[n]!.pago === p)}
+                      className={
+                        vendidos.every((n) => estado.tickets[n]!.pago === p) ? 'boton--primario' : ''
+                      }
+                      onClick={async () => setError(await marcarPago(vendidos, p))}
                     >
                       {NOMBRE_PAGO[p]}
                     </button>
@@ -146,11 +151,13 @@ export function DialogoNumero({
               {puedeEditar && ticket.telefono && (
                 <a
                   className="boton boton--primario"
-                  href={linkComprador(estado, numero)}
+                  href={linkComprador(estado, vendidos)}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Avisarle al comprador por WhatsApp
+                  {vendidos.length > 1
+                    ? `Avisarle por WhatsApp (${vendidos.length} números en un mensaje)`
+                    : 'Avisarle al comprador por WhatsApp'}
                 </a>
               )}
 
@@ -165,18 +172,25 @@ export function DialogoNumero({
                     type="button"
                     className="boton--peligro"
                     onClick={async () => {
-                      const ok = await confirmar(`¿Liberar el número ${etiqueta(numero, total)}?`, {
-                        texto: 'Vuelve a quedar disponible y se borran los datos del comprador.',
-                        aceptar: 'Liberar',
-                        peligro: true,
-                      });
+                      const cuales = vendidos.map((n) => etiqueta(n, total)).join(', ');
+                      const ok = await confirmar(
+                        vendidos.length > 1
+                          ? `¿Liberar los ${vendidos.length} números ${cuales}?`
+                          : `¿Liberar el número ${cuales}?`,
+                        {
+                          texto:
+                            'Vuelven a quedar disponibles y se borran los datos del comprador.',
+                          aceptar: 'Liberar',
+                          peligro: true,
+                        },
+                      );
                       if (!ok) return;
-                      const err = await liberar(numero);
+                      const err = await liberar(vendidos);
                       if (err) setError(err);
                       else onCerrar();
                     }}
                   >
-                    Liberar
+                    {vendidos.length > 1 ? `Liberar los ${vendidos.length}` : 'Liberar'}
                   </button>
                 </div>
               )}
