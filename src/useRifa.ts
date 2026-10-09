@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { nube } from './nube';
+import { nube, sitio } from './nube';
 import { veniaDeRecuperacion } from './sesion';
 import { mensajeVenta } from './ventas';
 import {
@@ -638,7 +638,7 @@ export function useRifa() {
 
   const recuperarClave = useCallback(async (email: string): Promise<string | null> => {
     const { error } = await nube!.auth.resetPasswordForEmail(email, {
-      redirectTo: `${location.origin}${location.pathname}`,
+      redirectTo: sitio,
     });
     return error ? error.message : null;
   }, []);
@@ -682,7 +682,7 @@ export function useRifa() {
   }, [olvidarRecuperacion]);
 
   const linkPublico = useCallback(
-    (id: string): string => `${location.origin}${location.pathname}?r=${slugs[id] ?? ''}`,
+    (id: string): string => `${sitio}/?r=${slugs[id] ?? ''}`,
     [slugs],
   );
 

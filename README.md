@@ -149,6 +149,7 @@ Copiar `.env.example` a `.env`. El prefijo manda:
 |---|---|---|
 | `VITE_SUPABASE_URL` | navegador | Proyecto de Supabase |
 | `VITE_SUPABASE_ANON_KEY` | navegador | Llave publicable |
+| `VITE_SITIO_URL` | navegador y servidor | Dominio público: enlaces de los correos, recuperar contraseña y link de la rifa |
 | `BREVO_API_KEY` | **solo servidor** | Enviar correos |
 | `BREVO_REMITENTE` | solo servidor | Remitente verificado en Brevo |
 | `SUPERADMIN_EMAIL` | solo servidor | A quién avisar de solicitudes nuevas |
@@ -168,8 +169,13 @@ npx vercel
 ```
 
 `vercel.json` ya trae el framework, la carpeta `dist` y el rewrite de SPA. En
-**Settings → Environment Variables** hay que cargar las seis variables de arriba.
+**Settings → Environment Variables** hay que cargar las siete variables de arriba.
 Las funciones de `api/` se despliegan solas.
+
+En Supabase → **Authentication → URL Configuration** hay que poner el mismo
+dominio en *Site URL* y en *Redirect URLs*: el correo para recuperar la
+contraseña lo manda Supabase, y descarta cualquier `redirectTo` que no esté en
+esa lista (cae al *Site URL*, que de fábrica es `http://localhost:3000`).
 
 ---
 

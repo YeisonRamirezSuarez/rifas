@@ -17,7 +17,7 @@ function apiCorreo(): Plugin {
             const { estado, datos } = await modulo.manejarCorreo(
               JSON.parse(cuerpo || '{}'),
               token,
-              'http://localhost:5173',
+              process.env.VITE_SITIO_URL || 'http://localhost:5173',
             );
             res.statusCode = estado;
             res.setHeader('Content-Type', 'application/json');
