@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { estadoNumero, etiqueta, formatearPrecio, ventas, type Estado } from '../rifa';
+import {
+  estadoNumero,
+  etiqueta,
+  filtrarVentas,
+  formatearPrecio,
+  ventas,
+  type Estado,
+  type FiltroVentas,
+} from '../rifa';
 
 type Props = {
   estado: Estado;
@@ -13,6 +21,7 @@ type Props = {
  */
 export function ListaVentas({ estado, onNumeros }: Props) {
   const [busca, setBusca] = useState('');
+  const [filtro, setFiltro] = useState<FiltroVentas>('todas');
   const { totalNumeros, precio, moneda } = estado.config;
   const q = busca.trim().toLowerCase();
   const compradores = ventas(estado);
@@ -26,7 +35,7 @@ export function ListaVentas({ estado, onNumeros }: Props) {
     );
   }
 
-  const lista = compradores.filter(
+  const lista = filtrarVentas(compradores, filtro).filter(
     (v) =>
       !q ||
       v.nombre.toLowerCase().includes(q) ||
@@ -51,9 +60,28 @@ export function ListaVentas({ estado, onNumeros }: Props) {
         placeholder="Buscar nombre, teléfono o número"
         aria-label="Buscar comprador"
       />
+      <div className="ventas__filtros" role="group" aria-label="Filtrar ventas">
+        {(
+          [
+            { id: 'todas', titulo: 'Todas' },
+            { id: 'cobrar', titulo: 'Por cobrar' },
+            { id: 'pagadas', titulo: 'Pagadas' },
+          ] as const
+        ).map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            aria-pressed={filtro === f.id}
+            className={`ventas__filtro${filtro === f.id ? ' ventas__filtro--activo' : ''}`}
+            onClick={() => setFiltro(f.id)}
+          >
+            {f.titulo}
+          </button>
+        ))}
+      </div>
       <ul className="ventas">
         {lista.map((v) => (
-          <li key={v.telefono || v.nombre} className="ventas__fila">
+          <li key={`${v.telefono}|${v.nombre}`} className="ventas__fila">
             <div className="ventas__quien">
               <strong>{v.nombre}</strong>
               <span>{v.telefono}</span>
@@ -88,8 +116,11 @@ export function ListaVentas({ estado, onNumeros }: Props) {
             </div>
           </li>
         ))}
-        {!lista.length && <li className="panel__nota">Nadie coincide con «{busca}».</li>}
+        {!lista.length && !!q && <li className="panel__nota">Nadie coincide con «{busca}».</li>}
       </ul>
+      {lista.length === 0 && !q && (
+        <p className="panel__nota">Nadie en este filtro. Toca «Todas» para ver a todos.</p>
+      )}
     </>
   );
 }

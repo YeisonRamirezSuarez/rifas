@@ -7,6 +7,7 @@ import {
   ESTADO_INICIAL,
   finalizar as finalizarPuro,
   guardarConfig,
+  hidratarConfig,
   liberar as liberarPuro,
   marcarPago as marcarPagoPuro,
   reabrir as reabrirPuro,
@@ -41,7 +42,7 @@ function normalizar(estado: Estado): Estado {
   const tickets = Object.fromEntries(
     Object.entries(estado.tickets ?? {}).map(([n, t]) => [n, { ...t, pago: t.pago ?? 'pendiente' }]),
   );
-  return { config: { ...CONFIG_INICIAL, ...estado.config }, tickets };
+  return { config: hidratarConfig(estado.config), tickets };
 }
 
 function almacenNuevo(): Almacen {
@@ -119,7 +120,7 @@ async function leerNube(rifaId: string, propia: boolean): Promise<Estado> {
     };
   }
 
-  return { config: { ...CONFIG_INICIAL, ...(fila.data?.config as Config | undefined) }, tickets };
+  return { config: hidratarConfig(fila.data?.config as Partial<Config> | undefined), tickets };
 }
 
 const resumen = (id: string, slug: string, e: Estado): ResumenRifa => ({
@@ -251,7 +252,7 @@ export function useRifa() {
       const mapa: Record<string, string> = {};
       const resumenes = (propias as { id: string; slug: string; config: Config }[]).map((r) => {
         mapa[r.id] = r.slug;
-        return resumen(r.id, r.slug, { config: { ...CONFIG_INICIAL, ...r.config }, tickets: {} });
+        return resumen(r.id, r.slug, { config: hidratarConfig(r.config), tickets: {} });
       });
       setLista(resumenes);
       setSlugs((s) => ({ ...s, ...mapa }));

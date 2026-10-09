@@ -17,9 +17,13 @@
   --ocre-texto: #8a5a1e;
   --ocre-suave: #f4e9d8;
   --peligro: #8e2f24;
-  --radio: 4px;
-  --radio-lg: 6px;
-  --sombra: 0 1px 2px rgb(28 38 36 / 0.06);
+  /* Redondeo del chrome. El póster no usa estos tokens: sus radios van en cqi
+     para escalar con la lámina. */
+  --radio: 10px;
+  --radio-lg: 16px;
+  --radio-pastilla: 999px;
+  --radio-hoja: 26px 26px 0 0;
+  --sombra: 0 1px 3px rgb(28 38 36 / 0.06);
   --ui-serif: 'Source Serif 4', Georgia, serif;
   --ui-sans: 'IBM Plex Sans', system-ui, sans-serif;
 
@@ -69,11 +73,6 @@ dd,
   justify-items: center;
 }
 
-.app--panel {
-  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
-  align-items: start;
-}
-
 .app__toggle,
 .app__barra {
   grid-column: 1 / -1;
@@ -87,6 +86,110 @@ dd,
   border: 1px solid var(--borde);
   border-radius: var(--radio-lg);
   box-shadow: var(--sombra);
+}
+
+/* ---------- navegación por pestañas ---------- */
+
+.nav {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.nav__item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.45rem 0.3rem;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--tinta-suave);
+}
+
+/* button:hover pisaría el fondo activo: se duplica el selector para ganarle. */
+.nav__item--activo,
+.nav__item--activo:hover {
+  background: var(--acento-suave);
+  border-color: var(--acento-suave);
+  color: var(--acento-oscuro);
+  font-weight: 600;
+}
+
+/* Doble clase: gana el tamaño propio sobre el de .icono-ui, que va más abajo. */
+.nav__icono.icono-ui {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+/* Celular: barra fija abajo. El contenido reserva su alto para que el último
+   botón de cada sección no quede debajo de la barra. */
+@media (max-width: 900px) {
+  .nav {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 20;
+    gap: 0;
+    padding: 0.3rem 0.4rem calc(0.3rem + env(safe-area-inset-bottom));
+    background: var(--tarjeta);
+    border-top: 1px solid var(--borde);
+    box-shadow: 0 -2px 10px rgb(28 38 36 / 0.07);
+  }
+
+  .nav__item {
+    border-radius: var(--radio-lg);
+  }
+
+  .app--pestanas {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  /* La navegación fija le quita el borde inferior a la pantalla: la barra de
+     selección se apoya encima para que el botón de vender siga alcanzable. */
+  .app--pestanas .app__multiple--marcando {
+    bottom: calc(4.3rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Escritorio: columna a la izquierda, misma lista. */
+@media (min-width: 901px) {
+  .app--pestanas {
+    grid-template-columns: 190px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .nav {
+    position: sticky;
+    top: calc(3.6rem + var(--pad));
+    flex-direction: column;
+    gap: 0.3rem;
+    width: 100%;
+    padding: 0.5rem;
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-lg);
+    box-shadow: var(--sombra);
+  }
+
+  .nav__item {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.6rem;
+    padding: 0.6rem 0.7rem;
+    border-radius: var(--radio-pastilla);
+    font-size: 0.8rem;
+    text-align: left;
+  }
+}
+
+.app__contenido {
+  display: grid;
+  gap: 1.25rem;
+  width: 100%;
+  min-width: 0;
+  justify-items: center;
 }
 
 .app__marca {
@@ -113,6 +216,9 @@ dd,
 }
 
 .app__salir {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   color: var(--tinta-suave);
 }
 
@@ -579,22 +685,9 @@ dd,
   font-size: 0.9rem;
 }
 
-@media (max-width: 900px) {
-  .app--panel {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 /* ---------- póster ----------
    Todo el póster mide en cqi (1% de su propio ancho): en móvil se encoge
    entero en vez de reacomodarse, así el 10x10 nunca se rompe. */
-
-.app__laminas {
-  display: grid;
-  gap: 1.5rem;
-  justify-items: center;
-  width: 100%;
-}
 
 /* Sin tablero al lado, la lámina del ganador se queda con todo el ancho. */
 .app__poster--solo {
@@ -1195,6 +1288,10 @@ dd,
 .panel__tab {
   flex: 0 0 auto;
   padding: 0.45rem 0;
+  /* El subrayado se apoya en la línea de `.panel__nav`: sin el -1px queda
+     flotando encima de ella. Y sin anular el radio de pastilla que traen todos
+     los `button`, se curva en las puntas como un garabato hecho a mano. */
+  margin-bottom: -1px;
   border: 0;
   border-bottom: 2px solid transparent;
   border-radius: 0;
@@ -1347,13 +1444,61 @@ textarea {
   width: 100%;
   padding: 0.5rem 0.6rem;
   border: 1px solid var(--borde-fuerte);
-  border-radius: var(--radio);
+  border-radius: var(--radio-pastilla);
   background: #ffffff;
   color: inherit;
   font: inherit;
   font-size: 1rem; /* 16px evita el zoom automático de iOS al enfocar */
   text-transform: none;
   letter-spacing: normal;
+}
+
+/* El `input[type='file']` crudo queda como un campo vacío con un botón del
+   sistema adentro: la píldora de campo alrededor y «Ningún archivo
+   seleccionado» al lado. Aquí se deja solo el botón, con el aspecto de los
+   demás. El texto del estado se oculta con `color: transparent` porque no se
+   puede quitar: las dos pantallas que suben fotos limpian el valor del input
+   y muestran la foto subida, así que nunca dice nada útil. */
+input[type='file'] {
+  /* `label` es grid: sin esto el input se estira a todo el ancho y deja una
+     zona clicable enorme y vacía al lado del botón. */
+  justify-self: start;
+  width: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: transparent;
+}
+
+input[type='file']::file-selector-button {
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  background: var(--tarjeta);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+input[type='file']:hover:not(:disabled)::file-selector-button {
+  background: var(--acento-suave);
+  border-color: var(--acento);
+}
+
+/* Mientras sube, el input va `disabled`: sin esto el botón sigue pareciendo
+   que acepta otro archivo. */
+input[type='file']:disabled::file-selector-button {
+  opacity: 0.5;
+  cursor: default;
+}
+
+textarea {
+  border-radius: var(--radio-lg);
 }
 
 /* Contraseña con ojito: el botón va encima del campo, con hueco reservado a la
@@ -1433,7 +1578,7 @@ button,
 .boton {
   padding: 0.5rem 0.9rem;
   border: 1px solid var(--borde-fuerte);
-  border-radius: var(--radio);
+  border-radius: var(--radio-pastilla);
   background: var(--tarjeta);
   color: var(--tinta);
   font: inherit;
@@ -1506,9 +1651,24 @@ button:focus-visible,
   max-height: 55vh;
   height: auto;
   object-fit: contain;
-  margin-bottom: 1rem;
   border-radius: 8px;
   background: #0003;
+}
+
+/* Solo las hojas se desplazan: la X y «Compartir» quedan a la vista (en el celular no hay Escape). */
+.dialogo__hojas {
+  display: grid;
+  gap: 0.8rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-bottom: 1rem;
+}
+
+.dialogo__hoja {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
 }
 
 .dialogo__titulo {
@@ -1544,6 +1704,16 @@ button:focus-visible,
   background: color-mix(in srgb, var(--peligro) 7%, var(--tarjeta));
   border-radius: 0 var(--radio) var(--radio) 0;
   color: var(--peligro);
+  font-size: 0.85rem;
+}
+
+.dialogo__aviso {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border-left: 2px solid var(--ocre);
+  background: color-mix(in srgb, var(--ocre) 9%, var(--tarjeta));
+  border-radius: 0 var(--radio) var(--radio) 0;
+  color: var(--ocre-texto);
   font-size: 0.85rem;
 }
 
@@ -1599,6 +1769,95 @@ button:focus-visible,
     width: 2.75rem;
     height: 2.75rem;
   }
+
+  /* Vender es la acción más repetida del día: la ficha sube desde abajo, donde
+     está el pulgar, en vez de aparecer centrada. */
+  .dialogo--numero {
+    width: 100%;
+    margin: auto auto 0;
+    border-radius: var(--radio-hoja);
+    border-bottom: none;
+  }
+}
+
+/* ---------- hoja 2: fotos ---------- */
+
+.fotos {
+  display: grid;
+  gap: 2cqi;
+  width: 100%;
+  padding: 0 4cqi;
+  grid-template-columns: 1fr;
+}
+
+.fotos__marco {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin: 0;
+  /* Fondo y no <img>: una foto borrada del bucket deja el marco con su color y
+     su texto, y la exportación sigue funcionando. */
+  background-color: var(--crema);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border: 0.6cqi solid var(--rosa);
+  border-radius: 2cqi;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  /* El rótulo se mueve hasta 70px (9,7cqi) sobre la lámina de 720px: sin este
+     colchón, un `dy` positivo lo mete bajo el borde y el `overflow` lo come. */
+  padding-bottom: 10cqi;
+  /* El rótulo se mueve hasta 60px (8,3cqi) a los lados: sin colchón lateral, el
+     `overflow` corta un texto largo en los extremos del control «Mover a los lados». */
+  padding-inline: 9cqi;
+}
+
+.fotos__texto {
+  max-width: 90%;
+  padding: 1cqi 2cqi;
+  background: rgb(0 0 0 / 0.28);
+  border-radius: 1.5cqi;
+  font-family: var(--serif);
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  text-wrap: balance;
+  /* Con el colchón lateral del marco la caja mide ~167px: a tamaño 34 una palabra
+     de 11 letras no cabe y el `overflow` del marco la cortaría. */
+  overflow-wrap: anywhere;
+}
+
+/* `vino` es el fondo oscuro de las paletas: sobre el velo negro no se lee. */
+.fotos__texto--vino {
+  background: rgb(255 255 255 / 0.72);
+}
+
+/* Con dos fotos: dos columnas verticales. Apiladas a 4:3 el collage mide
+   128cqi, no cabe en los ~64cqi que deja el 9:16, y la exportación reduce la
+   lámina entera al 0,73. */
+.poster--fotos-2 .fotos {
+  grid-template-columns: 1fr 1fr;
+}
+
+.poster--fotos-2 .fotos__marco {
+  aspect-ratio: 3 / 4;
+}
+
+/* Con tres fotos: dos arriba y una ancha abajo. */
+.poster--fotos-3 .fotos {
+  grid-template-columns: 1fr 1fr;
+}
+
+.poster--fotos-3 .fotos__marco:nth-child(3) {
+  grid-column: 1 / -1;
+  aspect-ratio: 16 / 9;
+}
+
+.poster--fotos .fotos {
+  flex: 1;
+  align-content: center;
 }
 
 /* ---------- compradores ----------
@@ -1614,6 +1873,29 @@ button:focus-visible,
 .ventas__resumen strong {
   color: var(--ocre-texto);
   font-weight: 600;
+}
+
+.ventas__filtros {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+}
+
+.ventas__filtro {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.78rem;
+}
+
+.ventas__filtro--activo,
+.ventas__filtro--activo:hover {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: var(--tinta-boton);
+}
+
+.ventas__filtro--activo:hover {
+  background: var(--acento-oscuro);
+  border-color: var(--acento-oscuro);
 }
 
 .ventas {
@@ -1752,6 +2034,10 @@ button:focus-visible,
     min-height: 2.75rem;
   }
 
+  .ventas__filtro {
+    min-height: 2.75rem;
+  }
+
   .sugerencias__op {
     min-height: 2.75rem;
   }
@@ -1772,29 +2058,184 @@ button:focus-visible,
    arriba sin tener que subirles la especificidad.
    ========================================================================== */
 
-/* La barra queda a la vista: es la única salida hacia Ajustes y la sesión. */
+/* La barra queda a la vista: dice sobre qué rifa se trabaja y cierra la sesión. */
 .app__barra {
   position: sticky;
   top: 0;
   z-index: 5;
 }
 
-.app__ajustes {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
+/* ---------- pestaña Compartir ---------- */
+
+.compartir {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: stretch;
 }
 
-.app__ajustes--activo,
-.app__ajustes--activo:hover {
-  background: var(--acento);
-  border-color: var(--acento-oscuro);
-  color: var(--tinta-boton);
+.compartir__link {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.compartir__link input {
+  font-size: 0.8rem;
+}
+
+.compartir__link button {
+  flex: none;
+}
+
+/* La lámina se ve a escala dentro de la pestaña: es la que sale en el PNG. */
+.compartir__laminas {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* La vista previa de la hoja 2 dentro de ajustes. */
+.panel__lamina {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* A 720px la lámina se come el panel entero y hay que bajar hasta el editor
+   para tocar un control. El póster se maqueta en `cqi`, así que achicar el
+   ancho achica todo lo de adentro: es la misma hoja, en pequeño. */
+.panel__lamina .poster {
+  width: min(100%, 340px);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+}
+
+/* ---------- cabecera de la rifa ---------- */
+
+.cab {
+  display: grid;
+  gap: 0.75rem;
+  width: min(100%, 720px);
+  padding: 0.9rem;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--sombra);
+}
+
+/* Fondo y no <img>: una URL caída deja el marco con su color, sin icono roto. */
+.cab__foto {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: var(--banda);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-radius: var(--radio);
+}
+
+.cab__datos {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.cab__premio {
+  margin: 0;
+  font-family: var(--ui-serif);
+  font-size: 1.1rem;
   font-weight: 600;
 }
 
-.app__ajustes--activo:hover {
-  background: var(--acento-oscuro);
+.cab__linea {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--tinta-suave);
+}
+
+.cab__barra {
+  height: 0.5rem;
+  margin-top: 0.3rem;
+  background: var(--banda);
+  border-radius: var(--radio-pastilla);
+  overflow: hidden;
+}
+
+.cab__barra span {
+  display: block;
+  height: 100%;
+  background: var(--acento);
+}
+
+.cab__pct {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+.panel__previo-foto {
+  max-width: 220px;
+}
+
+/* ---------- editor de fotos ---------- */
+
+.editor {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.editor__foto {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+}
+
+.editor__foto legend {
+  padding: 0 0.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+.editor__previo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: var(--banda);
+  background-position: center;
+  background-size: cover;
+  border-radius: var(--radio);
+}
+
+.editor__colores {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.editor__color {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 2px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+}
+
+.editor__color--activo,
+/* `button:hover` cambia el borde: con el puntero encima, el activo se
+   disfrazaba de inactivo. */
+.editor__color--activo:hover {
+  border-color: var(--tinta);
+  box-shadow: 0 0 0 2px var(--acento-suave);
+}
+
+.panel__subtitulo {
+  margin: 0.4rem 0 0;
+  font-family: var(--ui-serif);
+  font-size: 0.95rem;
 }
 
 /* ---------- cabecera del tablero: en qué va y cómo llegar a un número ---------- */
@@ -1933,28 +2374,6 @@ button:focus-visible,
   opacity: 0.75;
 }
 
-/* ---------- escritorio ---------- */
-
-@media (min-width: 901px) {
-  /* El panel sigue al scroll del tablero: el póster mide dos pantallas y antes
-     la configuración se quedaba arriba, fuera de alcance. */
-  .app--panel .app__columna {
-    position: sticky;
-    top: calc(3.6rem + var(--pad));
-    align-self: start;
-  }
-}
-
-/* ---------- móvil ---------- */
-
-@media (max-width: 900px) {
-  /* Ajustes es una vista, no un apéndice: con el panel abierto el tablero
-     estaba a tres pantallas de scroll y nadie lo encontraba. */
-  .app--panel .app__laminas {
-    display: none;
-  }
-}
-
 @media (max-width: 560px) {
   /* Cuatro columnas dejaban la cifra de dinero en 58px. Las tres cuentas
      caben en fila; la colilla baja y se lee como el total de un recibo. */
@@ -1999,11 +2418,27 @@ button:focus-visible,
   }
 
   .app__barra button,
+  /* La barra de pestañas también se toca en una tableta, donde la maqueta ya es
+     la de escritorio y el alto propio se queda en 42,8 px. */
+  .nav__item,
   .panel__tab,
   .misrifas__item,
   .misrifas__nueva button,
   .tbar__ir-campo button,
   .galeria__mas {
+    min-height: 2.75rem;
+  }
+
+  input[type='file']::file-selector-button {
+    min-height: 2.75rem;
+  }
+
+  /* Los `range` del sistema se quedan en ~20 px y son la interacción de la hoja de fotos. */
+  .compartir__link button,
+  .panel__quitar-foto,
+  .editor select,
+  .editor > button,
+  .editor input[type='range'] {
     min-height: 2.75rem;
   }
 }
@@ -2128,25 +2563,12 @@ button:focus-visible,
     height: 1.5rem;
   }
 
-  .app__ajustes {
+  /* Sin el panel desplegable esta es la única salida: se queda en la barra, y
+     si no cabe al lado del nombre de la rifa, la barra la baja a otra fila. */
+  .app__salir {
     flex: none;
     padding: 0.4rem 0.7rem;
     font-size: 0.8rem;
-  }
-
-  /* Cerrar sesión no es tarea de todos los días: baja al panel de ajustes. */
-  .app__salir {
-    display: none;
-  }
-
-  .app--panel .app__barra {
-    flex-wrap: wrap;
-  }
-
-  .app--panel .app__salir {
-    display: inline-flex;
-    order: 3;
-    flex: 1 0 100%;
   }
 }
 

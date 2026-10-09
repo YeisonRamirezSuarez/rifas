@@ -85,6 +85,11 @@ export function DialogoNumero({
       : [];
   const sugerencias = coinciden.slice(0, 6);
 
+  // Conocidos que ya usan este celular con otro nombre.
+  const mismoCelular = conocidos
+    .filter((c) => c.telefono === soloDigitos(telefono) && c.nombre.toLowerCase() !== escrito)
+    .map((c) => c.nombre);
+
   const usarCliente = (nombre: string, telefono: string) => {
     setComprador(nombre);
     setTelefono(telefono);
@@ -92,7 +97,7 @@ export function DialogoNumero({
   };
 
   return (
-    <dialog ref={ref} className="dialogo" onClose={onCerrar}>
+    <dialog ref={ref} className="dialogo dialogo--numero" onClose={onCerrar}>
       {numero !== null && (
         <>
           <h2 className="dialogo__titulo">
@@ -226,7 +231,7 @@ export function DialogoNumero({
               {sugerencias.length > 0 && (
                 <ul className="sugerencias">
                   {sugerencias.map((c) => (
-                    <li key={c.telefono}>
+                    <li key={`${c.telefono}|${c.nombre}`}>
                       <button
                         type="button"
                         className="sugerencias__op"
@@ -251,7 +256,10 @@ export function DialogoNumero({
                   onChange={(e) => {
                     const v = e.target.value;
                     setTelefono(v);
-                    // Teclear el número completo de alguien conocido también trae su nombre.
+                    // Trae el nombre solo si el campo está vacío. Antes lo pisaba siempre:
+                    // dos personas con el mismo celular y la venta quedaba a nombre del
+                    // primero, sin que el dueño se diera cuenta.
+                    if (comprador.trim()) return;
                     const c = conocidos.find((x) => x.telefono === soloDigitos(v));
                     if (c) setComprador(c.nombre);
                   }}
@@ -259,6 +267,14 @@ export function DialogoNumero({
                   placeholder="3162123456"
                 />
               </label>
+              {/* El dueño decide: el mismo celular puede ser de dos personas. Lo que
+                  no puede pasar es que la app cambie el nombre por su cuenta. */}
+              {mismoCelular.length > 0 && (
+                <p className="dialogo__aviso">
+                  Ese celular ya está a nombre de {mismoCelular.join(', ')}. Si es otra
+                  persona, sigue: se guardan por separado.
+                </p>
+              )}
               {/* Botones y no un <select>: elegir el pago es lo que más se toca
                   al vender, y un desplegable son dos toques y una lista tapando
                   el formulario. */}

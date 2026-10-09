@@ -64,6 +64,54 @@ export async function generarPng(
   }
 }
 
+export type Lamina = { nodo: HTMLElement | null; nombre: string; titulo: string };
+
+/**
+ * Las hojas se generan en orden, una a una: `html-to-image` dibuja sobre una
+ * copia fuera de pantalla y dos a la vez se pisan. Si una falla, las anteriores
+ * ya están hechas y se entregan: el aviso dice cuál faltó.
+ *
+ * `generar` entra por parámetro para poder probar el reparto sin DOM.
+ *
+ * `onHoja` avisa en cuál va antes de empezarla: dibujar una hoja de 1080x1920
+ * tarda decenas de segundos y el botón se queda mudo todo ese rato.
+ */
+export async function generarVarias(
+  laminas: Lamina[],
+  generar: typeof generarPng = generarPng,
+  onHoja?: (n: number, total: number) => void,
+): Promise<{ imagenes: Imagen[]; error?: string }> {
+  const imagenes: Imagen[] = [];
+  // Los títulos de las hojas que sí salieron: una lámina sin montar no genera
+  // imagen, así que el índice de `imagenes` no coincide con el de `laminas`.
+  const titulos: string[] = [];
+  const total = laminas.filter((l) => l.nodo).length;
+  let n = 0;
+  for (const l of laminas) {
+    if (!l.nodo) continue;
+    onHoja?.(++n, total);
+    const { imagen, error } = await generar(l.nodo, l.nombre);
+    if (error) {
+      const hechas = titulos.map((t) => `la ${t}`).join(' y ');
+      // `generarPng` ya cierra algunos mensajes con punto: sin quitarlo saldría «..».
+      const motivo = error.replace(/\.+$/, '');
+      return {
+        imagenes,
+        error: imagenes.length
+          ? `No se pudo generar la ${l.titulo}: ${motivo}. ${
+              hechas.charAt(0).toUpperCase() + hechas.slice(1)
+            } ya está lista.`
+          : `No se pudo generar la ${l.titulo}: ${motivo}`,
+      };
+    }
+    if (imagen) {
+      imagenes.push(imagen);
+      titulos.push(l.titulo);
+    }
+  }
+  return { imagenes };
+}
+
 export function descargar({ url, nombre }: Imagen): void {
   const enlace = document.createElement('a');
   enlace.href = url;
@@ -71,18 +119,18 @@ export function descargar({ url, nombre }: Imagen): void {
   enlace.click();
 }
 
-function archivo({ blob, nombre }: Imagen): File {
-  return new File([blob], `${nombre}.png`, { type: 'image/png' });
+function archivos(imagenes: Imagen[]): File[] {
+  return imagenes.map(({ blob, nombre }) => new File([blob], `${nombre}.png`, { type: 'image/png' }));
 }
 
-export function sePuedeCompartir(imagen: Imagen): boolean {
-  return !!navigator.canShare?.({ files: [archivo(imagen)] });
+export function sePuedeCompartir(imagenes: Imagen[]): boolean {
+  return imagenes.length > 0 && !!navigator.canShare?.({ files: archivos(imagenes) });
 }
 
 /** Compartir nativo: en el celular abre WhatsApp y demás directamente. */
-export async function compartir(imagen: Imagen): Promise<string | null> {
+export async function compartir(imagenes: Imagen[]): Promise<string | null> {
   try {
-    await navigator.share({ files: [archivo(imagen)], title: imagen.nombre });
+    await navigator.share({ files: archivos(imagenes), title: imagenes[0]?.nombre });
     return null;
   } catch (e) {
     // El usuario cerró la hoja de compartir: no es un error que valga mostrar.

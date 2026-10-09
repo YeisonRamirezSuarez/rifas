@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ejemploMensaje,
   etiqueta,
@@ -12,14 +12,17 @@ import {
 } from '../rifa';
 import { FONDOS, Florituras } from '../fondos';
 import { estiloPorId, ESTILOS_CELDA, Icono, MARCAS } from '../marcas';
+import { borrarFoto, subirFoto } from '../fotos';
 import { PALETAS, TIPOGRAFIAS } from '../temas';
 import type { EstadoGuardado } from '../useRifa';
 import { CampoNumero } from './CampoNumero';
+import { EditorFotos } from './EditorFotos';
 import { Leyenda } from './Leyenda';
-import { ListaVentas } from './ListaVentas';
+import { PosterFotos } from './PosterFotos';
 
 type Props = {
   estado: Estado;
+  rifaId: string;
   configurar: (config: Config) => void;
   guardado: EstadoGuardado;
   errorGuardado: string | null;
@@ -27,8 +30,6 @@ type Props = {
   finalizar: (numeroGanador: number) => Promise<string | null>;
   reabrir: () => Promise<string | null>;
   vaciarTablero: () => Promise<string | null>;
-  /** Abre la ficha de un número desde la lista de compradores. */
-  onNumeros: (numeros: number[]) => void;
   confirmar: (titulo: string, o?: { texto?: string; aceptar?: string; peligro?: boolean }) => Promise<boolean>;
 };
 
@@ -36,8 +37,8 @@ const PESTANAS = [
   { id: 'sorteo', titulo: 'Sorteo' },
   { id: 'diseno', titulo: 'Diseño' },
   { id: 'colores', titulo: 'Colores' },
+  { id: 'fotos', titulo: 'Fotos' },
   { id: 'mensaje', titulo: 'Mensaje' },
-  { id: 'compradores', titulo: 'Compradores' },
   { id: 'caja', titulo: 'Caja' },
   { id: 'cierre', titulo: 'Cierre' },
 ] as const;
@@ -119,6 +120,7 @@ function Galeria({
 
 export function PanelConfig({
   estado,
+  rifaId,
   configurar,
   guardado,
   errorGuardado,
@@ -127,7 +129,6 @@ export function PanelConfig({
   reabrir,
   vaciarTablero,
   confirmar,
-  onNumeros,
 }: Props) {
   const c = estado.config;
   const r = reporte(estado);
@@ -135,9 +136,47 @@ export function PanelConfig({
   const [intentoTotal, setIntentoTotal] = useState(0);
   const [ganadorTexto, setGanadorTexto] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const [errorFoto, setErrorFoto] = useState<string | null>(null);
 
   const set = <K extends keyof Config>(campo: K, valor: Config[K]) =>
     configurar({ ...c, [campo]: valor });
+
+  // La subida tarda y `set` cierra sobre la config de su render: al volver
+  // guardaría la config vieja entera y se llevaría por delante lo que se haya
+  // cambiado mientras subía, incluido el cierre del sorteo.
+  const setVivo = useRef(set);
+  setVivo.current = set;
+
+  // Si el panel se desmonta durante una subida (se salió de Ajustes o se cambió de rifa),
+  // `setVivo` queda con la config de ese último render y, al guardarla entera, reabriría un
+  // sorteo cerrado: la foto que llega tarde se descarta y su archivo queda huérfano en el bucket.
+  const montado = useRef(true);
+  useEffect(() => {
+    montado.current = true; // sin esto, el doble montaje de StrictMode lo deja en false
+    return () => {
+      montado.current = false;
+    };
+  }, []);
+
+  // Borrar el archivo antes de que el guardado confirme dejaría la config
+  // guardada apuntando a una foto que ya no existe: si el guardado falla, la
+  // pantalla vuelve a la URL vieja. Se encolan y se borran cuando sale bien. Si
+  // la app se cierra antes, el archivo queda huérfano, que es lo de menos.
+  const porBorrar = useRef<string[]>([]);
+  const encolarBorrado = (url: string) => {
+    if (url) porBorrar.current.push(url);
+  };
+  useEffect(() => {
+    if (guardado !== 'guardado' || porBorrar.current.length === 0) return;
+    const urls = porBorrar.current;
+    porBorrar.current = [];
+    for (const u of urls) void borrarFoto(u);
+  }, [guardado]);
+
+  // Un error de subida de hace tres pestañas no dice nada del formulario que se
+  // está mirando ahora.
+  useEffect(() => setErrorFoto(null), [pestana]);
 
   const dinero = (v: number) => formatearPrecio(v, c.moneda);
 
@@ -399,6 +438,115 @@ export function PanelConfig({
         </section>
       )}
 
+      {pestana === 'fotos' && (
+        <section
+          className="panel__seccion"
+          role="tabpanel"
+          id={`panel-${pestana}`}
+          aria-labelledby={`tab-${pestana}`}
+        >
+          <p className="panel__nota">
+            Las fotos son opcionales. Sin fotos, la rifa se ve completa y el póster es una
+            sola hoja de números.
+          </p>
+          {errorFoto && (
+            <p className="dialogo__error" role="alert">
+              {errorFoto}
+            </p>
+          )}
+
+          <label>
+            Foto del premio
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={subiendo}
+              onChange={async (e) => {
+                const archivo = e.target.files?.[0];
+                e.target.value = ''; // sin esto, volver a elegir el mismo archivo no dispara nada
+                if (!archivo) return;
+                setSubiendo(true);
+                setErrorFoto(null);
+                const vieja = c.fotoPremio;
+                try {
+                  const { url, error: falla } = await subirFoto(rifaId, archivo);
+                  if (falla) setErrorFoto(falla);
+                  else if (url && montado.current) {
+                    setVivo.current('fotoPremio', url);
+                    encolarBorrado(vieja);
+                  } else if (url) {
+                    // Llegó con el panel desmontado: esta foto no la referencia nada.
+                    void borrarFoto(url);
+                  }
+                } finally {
+                  setSubiendo(false);
+                }
+              }}
+            />
+          </label>
+          {subiendo && (
+            <p className="panel__nota" role="status">
+              Subiendo la foto…
+            </p>
+          )}
+          {c.fotoPremio && (
+            <>
+              <div
+                className="cab__foto panel__previo-foto"
+                style={{ backgroundImage: `url("${c.fotoPremio}")` }}
+                role="img"
+                aria-label="Foto del premio"
+              />
+              <button
+                type="button"
+                className="panel__quitar-foto"
+                onClick={async () => {
+                  const ok = await confirmar('¿Quitar la foto del premio?', {
+                    texto: 'El póster vuelve a mostrar el premio solo con texto.',
+                    aceptar: 'Quitar la foto',
+                    peligro: true,
+                  });
+                  // Mientras la confirmación está abierta la config puede cambiar: `setVivo`.
+                  if (!ok || !montado.current) return;
+                  setErrorFoto(null);
+                  setVivo.current('fotoPremio', '');
+                  encolarBorrado(c.fotoPremio);
+                }}
+              >
+                Quitar la foto del premio
+              </button>
+            </>
+          )}
+
+          <h3 className="panel__subtitulo">Hoja de fotos del póster</h3>
+          {/* Del editor solo se toman las fotos, escritas sobre la config viva del panel: lo
+              demás de la config queda al día aunque se cambie de pestaña mientras sube. Las fotos
+              no: tras salir y volver, la subida arma `n.fotos` con las del editor desmontado y
+              pisa lo editado en el nuevo antes de que termine (caso aceptado). */}
+          <EditorFotos
+            config={c}
+            configurar={(n) => {
+              if (montado.current) setVivo.current('fotos', n.fotos);
+            }}
+            rifaId={rifaId}
+            confirmar={confirmar}
+            onBorrar={encolarBorrado}
+          />
+
+          {/* Sin esto el tamaño y la posición del texto se ajustan a ciegas: la hoja 2
+              solo se veía en Compartir, a dos pestañas de distancia. Es la misma
+              `PosterFotos` que se exporta, con la config viva del panel. */}
+          {c.fotos.length > 0 && (
+            <>
+              <h3 className="panel__subtitulo">Así va quedando la hoja 2</h3>
+              <div className="panel__lamina">
+                <PosterFotos estado={{ ...estado, config: c }} />
+              </div>
+            </>
+          )}
+        </section>
+      )}
+
       {pestana === 'mensaje' && (
         <section
           className="panel__seccion"
@@ -442,17 +590,6 @@ export function PanelConfig({
           >
             Restaurar mensajes por defecto
           </button>
-        </section>
-      )}
-
-      {pestana === 'compradores' && (
-        <section
-          className="panel__seccion"
-          role="tabpanel"
-          id={`panel-${pestana}`}
-          aria-labelledby={`tab-${pestana}`}
-        >
-          <ListaVentas estado={estado} onNumeros={onNumeros} />
         </section>
       )}
 
@@ -502,7 +639,7 @@ export function PanelConfig({
             </tbody>
           </table>
           <p className="panel__nota">
-            Para cobrar, busca a la persona en Compradores y toca su número.
+            Para cobrar, busca a la persona en la pestaña Ventas y toca su número.
           </p>
         </section>
       )}

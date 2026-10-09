@@ -3,7 +3,9 @@ import { FONDOS, fondoPorId } from './fondos';
 import { estiloPorId, marcaPorId, MARCAS } from './marcas';
 import { PALETAS, TIPOGRAFIAS } from './temas';
 import {
+  avance,
   clientes,
+  CONFIG_INICIAL,
   ESTADO_INICIAL,
   estadoNumero,
   etiqueta,
@@ -11,6 +13,8 @@ import {
   formatearPrecio,
   ganador,
   guardarConfig,
+  hidratarConfig,
+  LARGO_TEXTO_FOTO,
   liberar,
   linkComprador,
   marcarPago,
@@ -25,6 +29,8 @@ import {
   vender,
   venderVarios,
   ventas,
+  type Config,
+  type Estado,
 } from './rifa';
 
 const conVenta = (n: number, nombre = 'Ana') => vender(ESTADO_INICIAL, n, nombre, '3162123456');
@@ -60,6 +66,25 @@ describe('rifa', () => {
       { nombre: 'Beto Paz', telefono: '3009998877' },
     ]);
     expect(clientes(liberar(e, 3))).toHaveLength(1);
+  });
+
+  it('solo acepta celulares colombianos reales', () => {
+    expect(() => vender(ESTADO_INICIAL, 5, 'Ana', '22')).toThrow('celular');
+    expect(() => vender(ESTADO_INICIAL, 5, 'Ana', '2222222')).toThrow('celular');
+    expect(() => vender(ESTADO_INICIAL, 5, 'Ana', '2162123456')).toThrow('celular'); // fijo, no celular
+    expect(() => vender(ESTADO_INICIAL, 5, 'Ana', '31621234567')).toThrow('celular'); // 11 dígitos
+    // Como lo escribe la gente: con indicativo, espacios o guiones.
+    expect(vender(ESTADO_INICIAL, 5, 'Ana', '+57 316 212 3456').tickets[5].telefono).toBe('3162123456');
+    expect(vender(ESTADO_INICIAL, 5, 'Ana', '316-212-3456').tickets[5].telefono).toBe('3162123456');
+  });
+
+  it('dos personas con el mismo teléfono no se funden en una sola venta', () => {
+    let e = vender(ESTADO_INICIAL, 2, 'Frijoles', '3105552143');
+    e = vender(e, 10, 'Yeison', '3105552143');
+    const v = ventas(e);
+    expect(v).toHaveLength(2);
+    expect(v.map((x) => x.nombre).sort()).toEqual(['Frijoles', 'Yeison']);
+    expect(clientes(e)).toHaveLength(2);
   });
 
   it('tapa datos del comprador', () => {
@@ -249,5 +274,131 @@ describe('rifa', () => {
       'Beto Páez',
       'Ana Ruiz',
     ]);
+  });
+});
+
+describe('fotos del póster', () => {
+  it('una rifa vieja sin los campos nuevos queda sin fotos', () => {
+    const c = hidratarConfig({ titulo: 'RIFA VIEJA', precio: 2000 });
+    expect(c.fotoPremio).toBe('');
+    expect(c.fotos).toEqual([]);
+    expect(c.titulo).toBe('RIFA VIEJA');
+  });
+
+  it('recorta a tres fotos y acota tamaño, posición y color', () => {
+    const c = hidratarConfig({
+      fotos: [
+        { url: 'a.jpg', texto: 'Uno', tam: 900, dx: -500, dy: 500, color: 'fucsia' },
+        { url: 'b.jpg' },
+        { url: 'c.jpg' },
+        { url: 'd.jpg' },
+      ],
+    } as unknown as Partial<Config>);
+    expect(c.fotos).toHaveLength(3);
+    expect(c.fotos[0]).toEqual({
+      url: 'a.jpg',
+      texto: 'Uno',
+      tam: 34,
+      dx: -60,
+      dy: 70,
+      color: 'crema',
+    });
+    expect(c.fotos[1].tam).toBe(16);
+  });
+
+  it('un texto larguísimo se corta', () => {
+    const c = hidratarConfig({
+      fotos: [{ url: 'a.jpg', texto: 'x'.repeat(300) }],
+    } as unknown as Partial<Config>);
+    expect(c.fotos[0].texto).toHaveLength(LARGO_TEXTO_FOTO);
+  });
+
+  it('fotos que no es una lista no rompe nada', () => {
+    expect(hidratarConfig({ fotos: null } as unknown as Partial<Config>).fotos).toEqual([]);
+    expect(hidratarConfig({ fotos: 'a.jpg' } as unknown as Partial<Config>).fotos).toEqual([]);
+  });
+
+  it('los emoji cuentan como un carácter y no se cortan por la mitad', () => {
+    const c = hidratarConfig({
+      fotos: [{ url: 'a.jpg', texto: '🏆'.repeat(50) }],
+    } as unknown as Partial<Config>);
+    expect([...c.fotos[0].texto]).toHaveLength(LARGO_TEXTO_FOTO);
+    expect(c.fotos[0].texto.endsWith('🏆')).toBe(true);
+  });
+
+  it('guardar config también acota las fotos', () => {
+    const guardado = guardarConfig(ESTADO_INICIAL, {
+      ...CONFIG_INICIAL,
+      fotos: [{ url: 'a.jpg', texto: '', tam: 1, dx: 0, dy: 0, color: 'crema' }],
+    });
+    expect(guardado.config.fotos[0].tam).toBe(8);
+  });
+
+  it('guardar config recorta a tres fotos y tira lo que no es una foto', () => {
+    const foto = (url: string) => ({ url, texto: '', tam: 16, dx: 0, dy: 0, color: 'crema' });
+    const guardado = guardarConfig(ESTADO_INICIAL, {
+      ...CONFIG_INICIAL,
+      fotos: [foto('a.jpg'), foto('b.jpg'), foto('c.jpg'), foto('d.jpg')],
+    } as unknown as Config);
+    expect(guardado.config.fotos.map((f) => f.url)).toEqual(['a.jpg', 'b.jpg', 'c.jpg']);
+
+    const basura = guardarConfig(ESTADO_INICIAL, {
+      ...CONFIG_INICIAL,
+      fotos: [null, 'a.jpg', foto('b.jpg')],
+    } as unknown as Config);
+    expect(basura.config.fotos.map((f) => f.url)).toEqual(['b.jpg']);
+  });
+
+  it('guardar config con fotos que no es una lista las deja en nada', () => {
+    const guardado = guardarConfig(ESTADO_INICIAL, {
+      ...CONFIG_INICIAL,
+      fotos: undefined,
+    } as unknown as Config);
+    expect(guardado.config.fotos).toEqual([]);
+  });
+});
+
+describe('avance', () => {
+  const conVendidos = (vendidos: number, total: number) => {
+    const tickets: Record<number, unknown> = {};
+    for (let n = 0; n < vendidos; n++) {
+      tickets[n] = { numero: n, comprador: 'Ana', telefono: '3001112233', pago: 'efectivo' };
+    }
+    return { config: { ...CONFIG_INICIAL, totalNumeros: total }, tickets } as unknown as Estado;
+  };
+
+  it('sin ventas va en 0', () => {
+    expect(avance(ESTADO_INICIAL)).toBe(0);
+  });
+
+  it('cuenta apartados y pagados sobre el total', () => {
+    const estado = {
+      config: { ...CONFIG_INICIAL, totalNumeros: 10 },
+      tickets: {
+        1: { numero: 1, comprador: 'Ana', telefono: '3001112233', pago: 'pendiente' },
+        2: { numero: 2, comprador: 'Ana', telefono: '3001112233', pago: 'efectivo' },
+        3: { numero: 3, comprador: 'Beto', telefono: '3004445566', pago: 'efectivo' },
+      },
+    } as unknown as Estado;
+    expect(avance(estado)).toBe(30);
+  });
+
+  it('con todos los números vendidos va en 100', () => {
+    expect(avance(conVendidos(100, 100))).toBe(100);
+  });
+
+  it('con más vendidos que números no pasa de 100', () => {
+    expect(avance(conVendidos(100, 50))).toBe(100);
+  });
+
+  it('sin números en el sorteo no divide entre cero', () => {
+    expect(avance(conVendidos(5, 0))).toBe(0);
+  });
+
+  it('el redondeo no da 100 sin estar agotada ni 0 con ventas', () => {
+    expect(avance(conVendidos(199, 200))).toBe(99);
+    expect(avance(conVendidos(995, 1000))).toBe(99);
+    expect(avance(conVendidos(1, 201))).toBe(1);
+    expect(avance(conVendidos(1, 1000))).toBe(1);
   });
 });
