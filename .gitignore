@@ -6,3 +6,5 @@ dist
 .env.local
 .db-url
 *.tsbuildinfo
+docs/superpowers/
+.mcp.json
