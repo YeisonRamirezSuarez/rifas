@@ -1634,7 +1634,13 @@ button:focus-visible,
   box-shadow: 0 12px 40px rgb(18 30 28 / 0.22);
   background: var(--tarjeta);
   color: var(--tinta);
-  position: relative;
+  /* `fixed` y no `relative`: en el top layer el navegador baja `relative` a
+     `absolute`, y entonces el diálogo se centra en la primera pantalla del
+     documento y no en la vista. Con el tablero recorrido, abrir un número subía
+     la página hasta arriba para mostrar el diálogo, y al cerrarlo había que
+     volver a bajar a buscar el número. `fixed` es lo que el navegador le da por
+     su cuenta a un `dialog` modal, y sigue anclando la X (`position: absolute`). */
+  position: fixed;
 }
 
 .dialogo::backdrop {

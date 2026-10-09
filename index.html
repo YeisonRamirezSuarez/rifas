@@ -2,7 +2,13 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- interactive-widget: el diálogo de venta es una ficha anclada abajo con
+         `position: fixed`. Sin esto, el teclado de Android se le pone encima y tapa
+         el botón de vender, porque la vista no se encoge al abrirse. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
+    />
     <title>Rifas</title>
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="theme-color" content="#14383D" />
