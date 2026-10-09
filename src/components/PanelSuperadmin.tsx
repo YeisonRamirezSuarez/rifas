@@ -46,6 +46,14 @@ const hoyLocal = () => {
 /** Solo para superadmin: acepta, desactiva y cambia el rol de las cuentas. */
 export function PanelSuperadmin({ cuentas, confirmar, decidir }: Props) {
   const [aviso, setAviso] = useState<string | null>(null);
+  // El mismo renglón sirve para fallos y para confirmaciones; en rojo, un "listo"
+  // se lee como error.
+  const [avisoOk, setAvisoOk] = useState(false);
+  /** Todo aviso pasa por aquí: así ninguno se queda con el color del anterior. */
+  const mostrar = (texto: string | null, ok = false) => {
+    setAviso(texto);
+    setAvisoOk(ok);
+  };
   // id de la fila con el formulario de pago abierto. null = ninguna.
   const [cobrando, setCobrando] = useState<string | null>(null);
   const [fecha_, setFecha] = useState('');
@@ -55,7 +63,7 @@ export function PanelSuperadmin({ cuentas, confirmar, decidir }: Props) {
     setCobrando(id);
     setFecha(pagadoEn ? pagadoEn.slice(0, 10) : hoyLocal());
     setNota(pagoNota ?? '');
-    setAviso(null);
+    mostrar(null);
   };
 
   const guardarPago = async (id: string, aprobar: boolean) => {
@@ -65,7 +73,7 @@ export function PanelSuperadmin({ cuentas, confirmar, decidir }: Props) {
           pagadoEn: fecha_ || null,
           pagoNota: nota.trim() || null,
         });
-    setAviso(err);
+    mostrar(err);
     if (!err) setCobrando(null);
   };
 
@@ -79,7 +87,7 @@ export function PanelSuperadmin({ cuentas, confirmar, decidir }: Props) {
       aceptar: activa ? 'Desactivar' : 'Rechazar',
       peligro: true,
     });
-    if (ok) setAviso(await decidir(id, 'rechazado'));
+    if (ok) mostrar(await decidir(id, 'rechazado'));
   };
 
   const cambiarRol = async (id: string, nombre: string, rol: Rol) => {
@@ -90,7 +98,7 @@ export function PanelSuperadmin({ cuentas, confirmar, decidir }: Props) {
       });
       if (!ok) return;
     }
-    setAviso(await cuentas.actualizarCuenta(id, { rol }));
+    mostrar(await cuentas.actualizarCuenta(id, { rol }));
   };
 
   return (
@@ -192,6 +200,19 @@ export function PanelSuperadmin({ cuentas, confirmar, decidir }: Props) {
                     {c.pagado_en ? 'Editar pago' : 'Registrar pago'}
                   </button>
                 )}
+                {/* Aprobar manda el correo una sola vez: si ese envío falla
+                    (Brevo caído, IP bloqueada) no había forma de repetirlo. */}
+                {c.estado === 'aprobado' && cobrando !== c.id && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const err = await decidir(c.id, 'aprobado');
+                      mostrar(err ?? `Correo de bienvenida reenviado a ${c.email}.`, !err);
+                    }}
+                  >
+                    Reenviar correo
+                  </button>
+                )}
                 {c.estado !== 'rechazado' && (
                   <button
                     type="button"
@@ -232,7 +253,7 @@ export function PanelSuperadmin({ cuentas, confirmar, decidir }: Props) {
                       <button
                         type="button"
                         onClick={async () => {
-                          setAviso(
+                          mostrar(
                             await decidir(c.id, 'aprobado', { pagadoEn: null, pagoNota: null }),
                           );
                           setCobrando(null);
@@ -259,7 +280,7 @@ export function PanelSuperadmin({ cuentas, confirmar, decidir }: Props) {
       )}
 
       {(aviso || cuentas.error) && (
-        <p className="dialogo__error" role="alert">
+        <p className={avisoOk ? 'panel__nota' : 'dialogo__error'} role="alert">
           {aviso ?? cuentas.error}
         </p>
       )}
